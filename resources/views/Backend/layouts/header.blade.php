@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>@yield('title','Portal')</title>
+  <title>@yield('title','Admin Dashboard ')</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
-
 </head>
 <body class="antialiased bg-gray-50 text-gray-900">
 
@@ -21,7 +20,7 @@
       </a>
 
       <div class="flex items-center gap-2">
-        @if(session('student_id'))
+     @if(session('admin_id'))
           <!-- Mobile sidebar toggle -->
           <button id="sidebarToggle"
                   class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100"
@@ -40,16 +39,16 @@
             <button id="profileDropdownBtn"
                     class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100">
               <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
-                {{ strtoupper(mb_substr($student->name,0,1)) }}
+                {{ strtoupper(mb_substr($admin->name,0,1)) }}
               </div>
-              <span class="hidden md:inline-block font-medium">{{ $student->name}}</span>
+              <span class="hidden md:inline-block font-medium">{{ $admin->name }}</span>
               <i class="fa-solid fa-chevron-down text-sm text-gray-500"></i>
             </button>
 
             <div id="profileDropdownMenu"
                  class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50">
               <div class="px-4 py-2 text-sm text-gray-600 border-b">
-                'student'
+                 Admin
               </div>
               <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -70,7 +69,7 @@
     </div>
   </header>
 
-  @if(  session('student_id'))
+  @if(session('admin_id'))
     <!-- SIDEBAR BACKDROP (mobile) -->
     <div id="sidebarBackdrop"
          class="hidden fixed inset-0 bg-black/30 z-40 lg:hidden"></div>
@@ -83,25 +82,25 @@
       <nav class="py-4">
         <ul class="space-y-1 px-3 text-sm">
           <li>
-            <a href="{{ route('student.dashboard') }}"
+            <a href="{{ route('admin.dashboard') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
               <i class="fas fa-tachometer-alt w-5 text-gray-300"></i>
               <span>Dashboard</span>
             </a>
           </li>
           <li>
-            <a href="#categories" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-              <i class="fas fa-tags w-5 text-gray-300"></i><span>Categories</span>
+            <a href="/bank_data" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+              <i class="fa fa-bank w-5 text-gray-300"></i><span>Bank Data</span>
             </a>
           </li>
           <li>
-            <a href="#stock" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-              <i class="fas fa-warehouse w-5 text-gray-300"></i><span>Stock Management</span>
+            <a href="{{route('students.import.form')}}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+              <i class="fas fa-users w-5 text-gray-300"></i><span>Student</span>
             </a>
           </li>
           <li>
             <a href="#bills" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-              <i class="fas fa-file-invoice w-5 text-gray-300"></i><span>Bills & Invoices</span>
+              <i class="fas fa-file-invoice w-5 text-gray-300"></i><span>Fee</span>
             </a>
           </li>
           <li>
@@ -130,8 +129,17 @@
   @endif
 
   <!-- MAIN (never sits under header; only shifts when sidebar is present) -->
-  <main class="pt-16 {{ $student ? 'lg:ml-64' : '' }} min-h-screen px-4 md:px-6">
-    
+  <main class="pt-16 lg:ml-64 min-h-screen px-4 md:px-6">
+    @if(session('success'))
+      <div class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3">
+        {{ session('success') }}
+      </div>
+    @endif
+    @if(session('error'))
+      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3">
+        {{ session('error') }}
+      </div>
+    @endif
 
     @yield('content')
   </main>

@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use App\Models\Admin;
+use App\Models\Student;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+     View::composer('Backend.layouts.header', function ($view) {
+        $view->with('admin', Admin::find(session('admin_id')));
+    });
+        View::composer('Frontend.layouts.header', function ($view) {
+            $view->with('student', Student::find(session('student_id')));   
+        });
     }
 }
