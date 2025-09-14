@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\FormController;
 
 use GuzzleHttp\Middleware;
 
@@ -22,7 +23,17 @@ Route::post('/login/admin', [AuthController::class, 'adminLogin'])->name('admin.
 
 Route::group(['middleware' => 'student.auth'], function () {
     Route::get('/dashboard/student', [DashboardController::class, 'student'])->name('student.dashboard');
+    Route::get('/form/{roll}', [FormController::class, 'showForm'])->name('form.show');
+    Route::get('/verify-form/{token}', [FormController::class, 'VerifyForm'])->name('form.verify');
+    Route::post('/verify-payment', [BankController::class, 'verify_payment'])->name('verify.payment');
 });
+
+
+
+
+
+
+
 
 
 Route::group(['middleware' => 'admin.auth'], function () {

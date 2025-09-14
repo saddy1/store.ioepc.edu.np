@@ -49,7 +49,7 @@
             <div id="profileDropdownMenu"
                  class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50">
               <div class="px-4 py-2 text-sm text-gray-600 border-b">
-                'student'
+                Student
               </div>
               <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -90,11 +90,11 @@
             </a>
           </li>
           <li>
-            <a href="#categories" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-              <i class="fas fa-tags w-5 text-gray-300"></i><span>Categories</span>
+            <a href="{{route('form.show',$student->roll_num)}}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+              <i class="fas fa-tags w-5 text-gray-300"></i><span>Application</span>
             </a>
           </li>
-          <li>
+          {{-- <li>
             <a href="#stock" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
               <i class="fas fa-warehouse w-5 text-gray-300"></i><span>Stock Management</span>
             </a>
@@ -123,7 +123,7 @@
             <a href="#settings" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
               <i class="fas fa-cog w-5 text-gray-300"></i><span>Settings</span>
             </a>
-          </li>
+          </li> --}}
         </ul>
       </nav>
     </aside>

@@ -17,6 +17,7 @@ $table->string('batch');
 $table->string('subject');
 $table->string('year');
 $table->string('part');
+$table->string('amount');
 $table->string('payment_id')->nullable();
 $table->string('status')->default('active'); // e.g., active|inactive|pending
 $table->timestamps();

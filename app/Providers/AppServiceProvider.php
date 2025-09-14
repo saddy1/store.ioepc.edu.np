@@ -22,11 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-     View::composer('Backend.layouts.header', function ($view) {
-        $view->with('admin', Admin::find(session('admin_id')));
-    });
+        View::composer('Backend.layouts.header', function ($view) {
+            $view->with('admin', Admin::find(session('admin_id')));
+        });
         View::composer('Frontend.layouts.header', function ($view) {
-            $view->with('student', Student::find(session('student_id')));   
+            $view->with('student', Student::find(session('student_id')));
         });
     }
 }

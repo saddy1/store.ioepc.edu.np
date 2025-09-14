@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class StudentController extends Controller
 {
+
     public function showImportForm(Request $request)
     {
         $allowedPerPage = [10, 20, 50, 100, 200];
@@ -38,6 +39,26 @@ class StudentController extends Controller
         return view('Backend.student.import', compact('students', 'perPage', 'allowedPerPage', 'q'));
     }
 
+
+
+    public function CalculateAmount($batch, $subject)
+    {
+        if ($batch == '069' || $batch == '070' || $batch == '071' || $batch == '072' || $batch == '073' || $batch == '074' || $batch == '075') {
+            return 510;
+        } else if (($batch == '076' || $batch == '077' || $batch == '078' || $batch == '079') && $subject <= 2) {
+            return 1000;
+        } else if (($batch == '076' || $batch == '077' || $batch == '078' || $batch == '079') && $subject > 2) {
+            return 1700;
+        } else if ($batch == '080' && $subject <= 2) {
+            return 1600;
+        } else if ($batch == '080' && $subject > 2) {
+            return 2750;
+        } else if ($batch == '081' && $subject <= 2) {
+            return 1690;
+        } else if ($batch == '081' && $subject > 2) {
+            return 2925;
+        }
+    }
     public function import(Request $request)
     {
         $request->validate([
@@ -152,7 +173,7 @@ class StudentController extends Controller
             try {
                 // Upsert by token_num
                 $existing = Student::where('token_num', $token)->first();
-
+                $amount = $this->CalculateAmount($batch, $subjectFinal);
                 $payload = [
                     'roll_num'   => $roll,
                     'name'       => $name ?: 'Unknown',
@@ -161,6 +182,7 @@ class StudentController extends Controller
                     'subject'    => $subjectFinal ?: '',
                     'year'       => $year ?: '',
                     'part'       => $part ?: '',
+                    'amount'     => $amount ?: 0,
                     // keep payment_id/status if you want; or set defaults
                 ];
 

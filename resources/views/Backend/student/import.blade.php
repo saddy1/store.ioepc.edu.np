@@ -95,9 +95,10 @@
           <th class="text-left px-4 py-3">Subject</th>
           <th class="text-left px-4 py-3">Year</th>
           <th class="text-left px-4 py-3">Part</th>
+          <th class="text-left px-4 py-3">Amount</th>
           <th class="text-left px-4 py-3">Payment ID</th>
           <th class="text-left px-4 py-3">Status</th>
-          <th class="text-left px-4 py-3">Created</th>
+          
         </tr>
       </thead>
       <tbody class="divide-y">
@@ -111,6 +112,8 @@
             <td class="px-4 py-3">{{ $s->subject }}</td>
             <td class="px-4 py-3">{{ $s->year }}</td>
             <td class="px-4 py-3">{{ $s->part }}</td>
+            <td class="px-4 py-3 font-mono text-gray-700">{{ $s->amount ?? '—' }}</td>
+
             <td class="px-4 py-3 font-mono text-gray-700">{{ $s->payment_id ?? '—' }}</td>
             <td class="px-4 py-3">
               <span class="px-2 py-1 text-xs rounded-full
@@ -118,7 +121,7 @@
                 {{ ucfirst($s->status) }}
               </span>
             </td>
-            <td class="px-4 py-3 text-gray-600">{{ $s->created_at?->format('Y-m-d H:i') }}</td>
+            
           </tr>
         @empty
           <tr>
