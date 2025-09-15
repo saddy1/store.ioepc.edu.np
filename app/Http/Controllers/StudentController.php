@@ -41,22 +41,51 @@ class StudentController extends Controller
 
 
 
-    public function CalculateAmount($batch, $subject)
+    public function CalculateAmount($batch, $subject, $fine)
     {
         if ($batch == '069' || $batch == '070' || $batch == '071' || $batch == '072' || $batch == '073' || $batch == '074' || $batch == '075') {
-            return 510;
+            if ($fine) {
+                return 510 + 1000;
+            } else {
+                return 510;
+            }
         } else if (($batch == '076' || $batch == '077' || $batch == '078' || $batch == '079') && $subject <= 2) {
-            return 1000;
+            if ($fine) {
+                return 1000 + 2000;
+            } else {
+                return 1000;
+            }
         } else if (($batch == '076' || $batch == '077' || $batch == '078' || $batch == '079') && $subject > 2) {
-            return 1700;
+
+            if ($fine) {
+                return 1700 + 2000;
+            } else {
+                return 1700;
+            }
         } else if ($batch == '080' && $subject <= 2) {
-            return 1600;
+            if ($fine) {
+                return 1600 + 2500;
+            } else {
+                return 1600;
+            }
         } else if ($batch == '080' && $subject > 2) {
-            return 2750;
+            if ($fine) {
+                return 2750 + 2500;
+            } else {
+                return 2750;
+            }
         } else if ($batch == '081' && $subject <= 2) {
-            return 1690;
+            if ($fine) {
+                return 1690 + 2500;
+            } else {
+                return 1690;
+            }
         } else if ($batch == '081' && $subject > 2) {
-            return 2925;
+            if ($fine) {
+                return 2925 + 2500;
+            } else {
+                return 2925;
+            }
         }
     }
     public function import(Request $request)
@@ -67,6 +96,9 @@ class StudentController extends Controller
 
         $file = $request->file('file');
         $ext  = strtolower($file->getClientOriginalExtension());
+        $fine = (int) $request->input('fine', 0);
+
+
 
         $rows = [];
 
@@ -173,7 +205,7 @@ class StudentController extends Controller
             try {
                 // Upsert by token_num
                 $existing = Student::where('token_num', $token)->first();
-                $amount = $this->CalculateAmount($batch, $subjectFinal);
+                $amount = $this->CalculateAmount($batch, $subjectFinal, $fine);
                 $payload = [
                     'roll_num'   => $roll,
                     'name'       => $name ?: 'Unknown',
@@ -183,12 +215,12 @@ class StudentController extends Controller
                     'year'       => $year ?: '',
                     'part'       => $part ?: '',
                     'amount'     => $amount ?: 0,
+                    'fine' => $fine ? true : false,
                     // keep payment_id/status if you want; or set defaults
                 ];
 
                 if ($existing) {
-                    $existing->update($payload);
-                    $updated++;
+                    $skipped++;
                 } else {
                     Student::create(array_merge(['token_num' => $token], $payload));
                     $inserted++;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Student; 
+use App\Models\StudentDocument;
 
 use Illuminate\Http\Request;
 
@@ -29,4 +30,5 @@ function VerifyForm($token)
 
   
 }
+
 }

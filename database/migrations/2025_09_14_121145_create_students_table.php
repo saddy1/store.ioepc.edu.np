@@ -19,7 +19,8 @@ $table->string('year');
 $table->string('part');
 $table->string('amount');
 $table->string('payment_id')->nullable();
-$table->string('status')->default('active'); // e.g., active|inactive|pending
+$table->boolean('fine')->default(false);
+$table->string('status')->default('unsubmitted'); // e.g., active|inactive|pending
 $table->timestamps();
 });
 }

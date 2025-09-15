@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\VoucherController;
 
 use GuzzleHttp\Middleware;
 
@@ -26,6 +27,9 @@ Route::group(['middleware' => 'student.auth'], function () {
     Route::get('/form/{roll}', [FormController::class, 'showForm'])->name('form.show');
     Route::get('/verify-form/{token}', [FormController::class, 'VerifyForm'])->name('form.verify');
     Route::post('/verify-payment', [BankController::class, 'verify_payment'])->name('verify.payment');
+
+    Route::post('/vouchers', [VoucherController::class, 'store'])->name('vouchers.store');
+
 });
 
 

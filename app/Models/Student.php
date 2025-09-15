@@ -12,6 +12,6 @@ use HasFactory;
 
 
 protected $fillable = [
-    'token_num', 'roll_num', 'name','faculty', 'batch', 'subject', 'year', 'part','amount', 'payment_id', 'status'
+    'token_num', 'roll_num', 'name','faculty', 'batch','subject', 'year', 'part', 'amount', 'payment_id','fine', 'status'
 ];
 }
