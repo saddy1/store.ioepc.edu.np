@@ -16,7 +16,7 @@ return new class extends Migration {
             // Paths to files (stored on 'public' disk)
             $table->string('payment_image'); // from input "payment_voucher"
             $table->string('voucher_image'); // from input "token_slip"
-
+$table->string('status')->default('Pending'); // Status column with default value 'Pending'
             $table->timestamps();
 
             // FK: references students.token_num (must be unique/indexed in students)

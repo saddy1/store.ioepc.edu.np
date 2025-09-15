@@ -109,20 +109,11 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#analytics" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-chart-line w-5 text-gray-300"></i><span>Analytics</span>
+                        <a href="{{route('applications.index')}}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fa fa-file w-5 text-gray-300"></i><span>Applications</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="#profit-loss" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-calculator w-5 text-gray-300"></i><span>Profit & Loss</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#customers" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-users w-5 text-gray-300"></i><span>Customers</span>
-                        </a>
-                    </li>
+                    
                     <li>
                         <a href="#settings" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
                             <i class="fas fa-cog w-5 text-gray-300"></i><span>Settings</span>

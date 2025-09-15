@@ -49,6 +49,13 @@ Route::group(['middleware' => 'admin.auth'], function () {
 
     Route::get('/students/import', [StudentController::class, 'showImportForm'])->name('students.import.form');
     Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
+
+    Route::get('/backend/applications', [VoucherController::class, 'show_application_form'])
+     ->name('applications.index');
+
+Route::post('/backend/applications/{token_num}/approve', [VoucherController::class, 'approve'])
+     ->name('applications.approve');
+
 });
 
 

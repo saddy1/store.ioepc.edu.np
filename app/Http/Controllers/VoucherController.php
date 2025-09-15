@@ -10,7 +10,43 @@ use Illuminate\Support\Facades\Storage;
 
 
 class VoucherController extends Controller
+
 {
+    public function show_application_form(Request $request)
+{
+    $allowed = [10,20,50,100,200];
+    $perPage = (int) $request->input('per_page', 10);
+    if (!in_array($perPage, $allowed)) $perPage = 10;
+
+    $q = trim((string) $request->input('q', ''));
+
+    $apps = StudentDocument::with(['student' => function ($q2) {
+        $q2->select('id','token_num','roll_num','name','amount','payment_id','status');
+    }])
+    ->when($q !== '', function ($query) use ($q) {
+        $query->where('token_num', 'like', "%{$q}%")
+              ->orWhereHas('student', fn($s) => $s->where('roll_num','like',"%{$q}%"));
+    })
+    ->orderByDesc('created_at')
+    ->paginate($perPage)
+    ->appends($request->query());
+
+    return view('Backend.pages.application_form', [
+        'applications'  => $apps,
+        'q'             => $q,
+        'perPage'       => $perPage,
+        'allowedPerPage'=> $allowed,
+    ]);
+}
+public function approve($token_num)
+{
+    $student = StudentDocument::where('token_num', $token_num)->firstOrFail();
+    $student->status = 'approved';
+    $student->save();
+
+    return back()->with('success', 'Application approved.');
+}
+
     public function store(Request $request)
     {
         // Validate: require token_num, PDFs only, max 2MB

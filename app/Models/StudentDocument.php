@@ -16,6 +16,7 @@ class StudentDocument extends Model
         'token_num',
         'payment_image',
         'voucher_image',
+        'status',
     ];
 
     public function student()
