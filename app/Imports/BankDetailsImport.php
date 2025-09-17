@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Imports;
 
 use Illuminate\Support\Collection;
@@ -12,17 +13,22 @@ class BankDetailsImport implements ToCollection
         $bankArr = [];
 
         // Validate if the fourth row, fifth column contains the specific account number
-        if (isset($rows[4][4]) && $rows[4][4] == "2319114258524002"||"2319114258524003") {
+        if (isset($rows[4][4]) && ($rows[4][4] == "2319114258524002" || $rows[4][4] == "2319114258524003")) {
 
             // Iterate over each row of the collection
             foreach ($rows as $key => $row) {
                 $bankDate = trim($row[2]);
                 $bankParticular = str_replace("/", " ", trim($row[4]));
                 $bankTxnID = trim($row[6]);
-                
+
                 // Extract numerical value from the string
                 $str = preg_replace('/[^0-9.]/', '', $row[14]);
                 $bankAmount = floatval($str);
+
+                // ✅ Only import transactions between 500 and 5000
+                if ($bankAmount < 500 || $bankAmount > 5000) {
+                    continue;
+                }
 
                 // Prepare to check conditions
                 if ($this->isValidTransaction($bankDate, $bankParticular, $bankTxnID, $bankAmount)) {
@@ -56,7 +62,21 @@ class BankDetailsImport implements ToCollection
     private function getDCNumber($bankParticular)
     {
         $isDCorS = $this->isDCorS($bankParticular);
-        return isset($isDCorS['DC']) ? $isDCorS['DC'] : 'n/a';
+
+        if (isset($isDCorS['DC']) && $isDCorS['DC'][0] === 'S') {
+            // Split by comma
+            $parts = explode(',', $bankParticular, 2);
+            $beforeComma = $parts[0] ?? '';
+
+            // Split by first '-'
+            $subParts = explode('-', $beforeComma, 2);
+            $result = $subParts[1] ?? '';
+
+            return $result ?: 'n/a';
+        }
+
+        // If not starting with 'S', just return DC if available
+        return $isDCorS['DC'] ?? 'n/a';
     }
 
     private function prepareTransactionArray($bankDate, $bankParticular, $bankAmount, $DCNUMBER, $bankTxnID)

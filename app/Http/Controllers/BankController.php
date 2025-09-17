@@ -10,12 +10,47 @@ use App\Models\Student;
 
 class BankController extends Controller
 {
-    public function index(Request $request)
-    {
-        $transactionData = TransactionBank::all();
-        return view('backend.bank.index', compact('transactionData'));
+   public function index(Request $request)
+{
+    $allowed = [10,20,50,100,200];
+    $perPage = (int) $request->input('per_page', 10);
+    if (!in_array($perPage, $allowed)) $perPage = 10;
+
+    $q      = trim((string) $request->input('q', ''));     // name/token/txn
+    $date   = $request->input('date');                     // YYYY-MM-DD
+    $status = $request->input('status');                   // 'used' | 'unused' | null
+
+    $query = TransactionBank::query();
+
+    // Filters
+    if ($q !== '') {
+        $query->where(function($x) use ($q) {
+            $x->where('name', 'like', "%{$q}%")
+              ->orWhere('amount', 'like', "%{$q}%")
+              ->orWhere('txn_id', 'like', "%{$q}%");
+        });
+    }
+    if (!empty($date)) {
+        // adjust column name if your date column is different (e.g., txn_date)
+        $query->whereDate('date', $date);
+    }
+    if ($status === 'used') {
+        $query->where('status', 2);     // Used
+    } elseif ($status === 'unused') {
+        $query->where('status', 1);     // Unused
     }
 
+    $transactions = $query->orderByDesc('date')->paginate($perPage)->appends($request->query());
+
+    return view('Backend.bank.index', [
+        'transactions'   => $transactions,
+        'q'              => $q,
+        'date'           => $date,
+        'status'         => $status,
+        'perPage'        => $perPage,
+        'allowedPerPage' => $allowed,
+    ]);
+}
     public function importForm()
     {
         return view('import');
@@ -39,6 +74,45 @@ class BankController extends Controller
             return redirect()->back()->with('error', 'Error importing data: ' . $e->getMessage());
         }
     }
+
+
+    public function importFromPublicFile()
+{
+    // Absolute path to: public/statement/NIC_ASIA_Statements/statement.xls
+   $path = public_path('NIC_ASIA_Statements/statement.xls');
+
+if (!file_exists($path)) {
+    return response()->json([
+        'status' => 'error',
+        'message' => "File not found: {$path}"
+    ], 404);
+}
+
+// Continue with your import
+try {
+    $importedData = Excel::import(new BankDetailsImport, $path);
+
+    if ($importedData === null) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'INVALID OR WRONG A/C IMPORT FILE UPLOADED'
+        ], 400);
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Data imported successfully.'
+    ], 200);
+
+} catch (\Exception $e) {
+    return response()->json([
+        'status' => 'error',
+        'message' => 'Error importing data: ' . $e->getMessage()
+    ], 500);
+}
+
+}
+
 
     public function verify_payment(Request $request)
     {

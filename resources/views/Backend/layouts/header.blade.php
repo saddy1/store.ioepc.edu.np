@@ -93,7 +93,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/bank_data" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                        <a href="{{route('bank.index')}}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
                             <i class="fa fa-bank w-5 text-gray-300"></i><span>Bank Data</span>
                         </a>
                     </li>

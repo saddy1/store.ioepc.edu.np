@@ -87,8 +87,10 @@
 
         <!-- Footer -->
         <footer class="bg-gray-800 text-white text-center py-4">
-            <p class="text-sm">© {{ date('Y') }} IOE Purwanchal Campus. All Rights Reserved.</p>
-        </footer>
+    <p class="text-sm">© {{ date('Y') }} IOE Purwanchal Campus. All Rights Reserved.</p>
+    <p class="text-sm mt-1">Developed by <a href="https://sadanandpaneru.com.np" class="underline hover:text-gray-300">Sadanand Paneru</a></p>
+</footer>
+
     </div>
 
 

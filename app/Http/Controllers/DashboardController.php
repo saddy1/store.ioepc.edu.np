@@ -11,7 +11,7 @@ class DashboardController extends Controller
 {
     public function home()
     {
-        return view('frontend.index');
+        return view('Frontend.index');
     }
 
 
