@@ -1,0 +1,479 @@
+<?php
+// app/Http/Controllers/StoreEntryController.php
+namespace App\Http\Controllers;
+
+use App\Models\{
+    StoreEntry, StoreEntryItem, Purchase, PurchaseItem,
+    ItemCategory, Category, Brand
+};
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class StoreEntryController extends Controller
+{
+     public function index(Request $request)
+    {
+        $q = StoreEntry::with(['purchase','supplier'])->latest('id');
+
+        if ($s = trim((string)$request->get('search'))) {
+            $q->where(function($w) use ($s){
+                $w->where('purchase_sn','like',"%{$s}%")
+                  ->orWhere('supplier_name','like',"%{$s}%");
+            });
+        }
+
+        $entries = $q->paginate(15)->appends($request->only('search'));
+        return view('backend.store.index', compact('entries'));
+    }
+
+    /** Step 1: Let user pick Item Category / Product Category / Brand per line */
+    public function prepare(Purchase $purchase)
+    {
+        $purchase->load(['supplier','items.product']);
+        $itemCategories = ItemCategory::orderBy('name_en')->get(['id','name_en']);
+        $productCategories = Category::orderBy('name')->get(['id','name']);
+        $brands = Brand::orderBy('name')->get(['id','name']);
+
+        // Build rows with smart defaults (from line, else product)
+        $rows = $purchase->items->map(function($line){
+            $name = $line->temp_name ?: ($line->product->name ?? '—');
+            $sn   = $line->temp_sn   ?: ($line->product->sku ?? null);
+            return [
+                'purchase_item_id' => $line->id,
+                'display_name'     => $name,
+                'sn'               => $sn,
+                'unit'             => $line->unit ?: ($line->product->unit ?? null),
+                'qty'              => (float)$line->qty,
+                'rate'             => (float)$line->rate,
+                'total'            => round((float)$line->qty * (float)$line->rate, 2),
+
+                // defaults
+                'item_category_id' => $line->item_category_id
+                    ?? ($line->product->item_category_id ?? null),
+                'category_id'      => $line->product->category_id ?? null,
+                'brand_id'         => $line->product->brand_id ?? null,
+            ];
+        });
+
+        return view('backend.store.prepare', compact(
+            'purchase','rows','itemCategories','productCategories','brands'
+        ));
+    }
+
+    /** Step 2: Create/refresh Store Entry using the user's selections */
+    public function postFromPurchase(Request $request, Purchase $purchase)
+{
+    $data = $request->validate([
+        'mapping'                               => ['required', 'array', 'min:1'],
+        'mapping.*.purchase_item_id'            => ['required', 'exists:purchase_items,id'],
+        'mapping.*.item_category_id'            => ['nullable', 'exists:item_categories,id'],
+        'mapping.*.category_id'                 => ['nullable', 'exists:categories,id'],
+        'mapping.*.brand_id'                    => ['nullable', 'exists:brands,id'],
+    ]);
+
+    $purchase->load(['supplier', 'items.product']);
+    $mapById = collect($data['mapping'])->keyBy('purchase_item_id');
+
+    return DB::transaction(function () use ($purchase, $mapById) {
+
+        // 1️⃣ Create or update Store Entry header
+        $entry = StoreEntry::updateOrCreate(
+            ['purchase_id' => $purchase->id],
+            [
+                'supplier_id'   => $purchase->supplier_id,
+                'purchase_sn'   => $purchase->purchase_sn,
+                'purchase_date' => (string)$purchase->purchase_date,
+                'supplier_name' => $purchase->supplier->name ?? null,
+                'remarks'       => $purchase->remarks,
+            ]
+        );
+
+        // 2️⃣ Rebuild all store_entry_items
+        $entry->items()->delete();
+
+        $bulk = [];
+        $storeDate = now()->toDateString();
+
+        foreach ($purchase->items as $line) {
+            $choice = $mapById->get($line->id) ?? [];
+
+            $name = $line->temp_name ?: ($line->product->name ?? '—');
+            $sn   = $line->temp_sn   ?: ($line->product->sku ?? null);
+            $unit = $line->unit      ?: ($line->product->unit ?? null);
+
+            $qty  = (float)$line->qty;
+            $rate = (float)$line->rate;
+
+            // Selected categories/brand
+            $itemCategoryId = $choice['item_category_id']
+                ?? $line->item_category_id
+                ?? ($line->product->item_category_id ?? null);
+
+            $categoryId = $choice['category_id']
+                ?? ($line->product->category_id ?? null);
+
+            $brandId = $choice['brand_id']
+                ?? ($line->product->brand_id ?? null);
+
+            // 3️⃣ Build Store Entry Item
+            $bulk[] = new StoreEntryItem([
+                'purchase_item_id' => $line->id,
+                'product_id'       => $line->product_id,
+                'item_category_id' => $itemCategoryId,
+                'category_id'      => $categoryId,
+                'brand_id'         => $brandId,
+                'item_name'        => $name,
+                'item_sn'          => $sn,
+                'unit'             => $unit,
+                'qty'              => $qty,
+                'rate'             => $rate,
+                'total_price'      => round($qty * $rate, 2),
+            ]);
+
+            // 4️⃣ Update purchase_items table
+            //     store_entry_sn ← category_id
+            //     store_entry_date ← current date
+            $line->update([
+                'store_entry_sn'   => $categoryId,
+                'store_entry_date' => $storeDate,
+                'item_category_id' => $itemCategoryId, // keep consistent
+            ]);
+        }
+
+        // 5️⃣ Save all items in one go
+        if ($bulk) {
+            $entry->items()->saveMany($bulk);
+        }
+
+        return redirect()
+            ->route('store.show', $entry)
+            ->with('success', 'Store entry created and purchase items updated with store entry data.');
+    });
+}
+
+// app/Http/Controllers/StoreEntryController.php
+
+public function show(\App\Models\StoreEntry $storeEntry)
+{
+    $storeEntry->load([
+        'purchase.supplier',
+        'purchase.slip',
+        'items' => function ($q) {
+            $q->with(['categoryRef','product','purchaseItem']);
+        },
+    ]);
+
+    // Header/meta used by the view
+    $meta = [
+        'purchase_sn'   => $storeEntry->purchase_sn,
+        'purchase_date' => $storeEntry->purchase_date,
+        'supplier'      => $storeEntry->supplier_name ?? $storeEntry->purchase?->supplier?->name ?? '—',
+        'slip_sn'       => $storeEntry->purchase?->slip?->po_sn,
+        'slip_date'     => optional($storeEntry->purchase?->slip?->po_date)->format('Y-m-d'),
+        'remarks'       => $storeEntry->purchase?->remarks ?? '',
+        'id'            => $storeEntry->id,
+    ];
+
+    // Rows for table
+    $rows = $storeEntry->items->map(function ($it, $i) {
+        $amt = (float) $it->total_price;
+        return [
+            'sn'         => $i+1,
+            'name'       => $it->item_name,
+            'sn_code'    => $it->item_sn,
+            'unit'       => $it->unit ?: '—',
+            'qty'        => number_format((float)$it->qty, 1),
+            'rate'       => number_format((float)$it->rate, 2),
+            'amount'     => number_format($amt, 2),
+            'category'   => $it->categoryRef?->name ?? '—',   // Product Category
+            'category_id'=> $it->category_id,
+            'ledger'     => $it->purchaseItem?->store_entry_sn ?? '', // you stored category_id here
+        ];
+    });
+
+    return view('backend.store.show', compact('storeEntry','meta','rows'));
+}
+
+
+public function ledgerByCategory(int $categoryId, Request $request)
+{
+    // Optional filters
+    $from = $request->date('from');
+    $to   = $request->date('to');
+
+    $q = StoreEntryItem::query()
+        ->with([
+            'entry.purchase.supplier',
+            'entry.purchase.slip',
+        ])
+        ->where('category_id', $categoryId)
+        ->orderBy('id', 'asc');
+
+    if ($from) {
+        $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '>=', $from));
+    }
+    if ($to) {
+        $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '<=', $to));
+    }
+
+    $items = $q->get();
+
+    $rows = [];
+    $grand = 0;
+
+    foreach ($items as $i => $it) {
+        $p   = $it->entry->purchase;
+        $sl  = $p->slip;
+
+        $amt = (float)$it->total_price;
+        $grand += $amt;
+
+        $rows[] = [
+            'sn'             => $i+1,
+            // Source basics
+            'slip_sn'        => $sl?->po_sn ?? '—',
+            'slip_date'      => optional($sl?->po_date)->format('Y-m-d'),
+            'purchase_sn'    => $p->purchase_sn,
+            'purchase_date'  => optional($p->purchase_date)->format('Y-m-d'),
+            'supplier'       => $p->supplier->name ?? '—',
+            'desc'           => $it->item_name,
+            'unit'           => $it->unit ?: '—',
+            'qty'            => number_format((float)$it->qty, 1),
+            'rate'           => number_format((float)$it->rate, 2),
+            'amount'         => number_format($amt, 2),
+            'ledger'         => $it->purchaseItem?->store_entry_sn ?? '',
+            'remarks'        => $p->remarks ?? '',
+        ];
+
+    }
+
+    // For header
+    $categoryName = Category::find($categoryId)?->name ?? "Category #$categoryId";
+
+    $meta = [
+        'category_id'   => $categoryId,
+        'category_name' => $categoryName,
+        'from'          => $from ? \Illuminate\Support\Carbon::parse($from)->format('Y-m-d') : null,
+        'to'            => $to   ? \Illuminate\Support\Carbon::parse($to)->format('Y-m-d')   : null,
+        'grand_total'   => number_format($grand, 2),
+    ];
+
+    return view('backend.store.ledger_category', compact('meta','rows'));
+}
+
+public function ledger(Request $request)
+{
+    // Optional date filters (apply to purchase_date)
+    $from = $request->date('from');
+    $to   = $request->date('to');
+
+    $q = StoreEntryItem::query()
+        ->selectRaw('category_id, COUNT(*) as items_count, SUM(total_price) as total_amount')
+        ->with(['category']) // needs relation on StoreEntryItem
+        ->whereNotNull('category_id')
+        ->when($from, fn($x) =>
+            $x->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '>=', $from))
+        )
+        ->when($to, fn($x) =>
+            $x->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '<=', $to))
+        )
+        ->groupBy('category_id')
+        ->orderBy('category_id');
+
+    $groups = $q->get();
+
+    // Decorate for view
+    $rows = $groups->map(function ($g) {
+        $name = optional($g->category)->name ?? ('Category #'.$g->category_id);
+        return [
+            'category_id'   => (int)$g->category_id,
+            'category_name' => $name,
+            'items_count'   => (int)$g->items_count,
+            'total_amount'  => number_format((float)$g->total_amount, 2),
+        ];
+    });
+
+    return view('backend.store.categories', [
+        'rows' => $rows,
+        'filters' => [
+            'from' => $from ? $from->format('Y-m-d') : null,
+            'to'   => $to   ? $to->format('Y-m-d')   : null,
+        ],
+    ]);
+}
+
+
+
+// public function categoryItems(int $categoryId, Request $request)
+// {
+//     $search = trim((string)$request->get('search', ''));
+//     $from   = $request->date('from');
+//     $to     = $request->date('to');
+
+//     $q = \App\Models\StoreEntryItem::query()
+//         ->with([
+//             'category:id,name',
+//             'entry:id,purchase_id',
+//             'entry.purchase:id,purchase_sn,purchase_date,supplier_id,purchase_slip_id,remarks',
+//             'entry.purchase.supplier:id,name',
+//             'entry.purchase.slip:id,po_sn,po_date',
+//         ])
+//         ->where('category_id', $categoryId);
+
+//     if ($search !== '') {
+//         $q->where(function($w) use ($search) {
+//             $w->where('item_name', 'like', "%{$search}%")
+//               ->orWhere('item_sn', 'like', "%{$search}%")
+//               ->orWhereHas('entry.purchase.supplier', fn($s) => $s->where('name', 'like', "%{$search}%"))
+//               ->orWhereHas('entry.purchase', fn($p) => $p->where('purchase_sn', 'like', "%{$search}%"))
+//               ->orWhereHas('entry.purchase.slip', fn($sl) => $sl->where('po_sn', 'like', "%{$search}%"));
+//         });
+//     }
+
+//     if ($from) {
+//         $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '>=', $from));
+//     }
+//     if ($to) {
+//         $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '<=', $to));
+//     }
+
+//     $items = $q->orderBy('id', 'desc')->paginate(20)->appends($request->only('search','from','to'));
+
+//     $categoryName = \App\Models\Category::find($categoryId)?->name ?? "Category #{$categoryId}";
+
+//     return view('backend.store.category_items', [
+//         'categoryId'   => $categoryId,
+//         'categoryName' => $categoryName,
+//         'items'        => $items,
+//         'filters'      => [
+//             'search' => $search,
+//             'from'   => $from ? $from->format('Y-m-d') : null,
+//             'to'     => $to   ? $to->format('Y-m-d')   : null,
+//         ],
+//     ]);
+// }
+
+public function browseRoot()
+{
+    return view('backend.store.browse_root');
+}
+
+/** List only Item Categories that have Store Entry Items */
+public function browseItemCategories()
+{
+    $ics = StoreEntryItem::query()
+        ->selectRaw('item_category_id, COUNT(*) as items_count, SUM(total_price) as total_amount')
+        ->whereNotNull('item_category_id')
+        ->groupBy('item_category_id')
+        ->orderBy('item_category_id')
+        ->get()
+        ->map(function($row){
+            $ic = ItemCategory::find($row->item_category_id);
+            return [
+                'item_category_id' => $row->item_category_id,
+                'name'             => $ic?->name_en ?? ("Item Category #".$row->item_category_id),
+                'items_count'      => (int)$row->items_count,
+                'total_amount'     => number_format((float)$row->total_amount, 2),
+            ];
+        });
+
+    return view('backend.store.browse_item_categories', compact('ics'));
+}
+
+/** From a chosen Item Category, show only Product Categories that exist under it */
+public function browseProductCategoriesUnderIC(int $itemCategoryId)
+{
+    $ic = ItemCategory::find($itemCategoryId);
+
+    // Aggregate product categories within this item category
+    $rows = StoreEntryItem::query()
+        ->where('item_category_id', $itemCategoryId)
+        ->whereNotNull('category_id')
+        ->selectRaw('category_id, COUNT(*) as items_count, SUM(total_price) as total_amount')
+        ->groupBy('category_id')
+        ->orderBy('category_id')
+        ->get()
+        ->map(function($row){
+            $cat = Category::find($row->category_id);
+            return [
+                'category_id'  => $row->category_id,
+                'category'     => $cat?->name ?? ("Category #".$row->category_id),
+                'items_count'  => (int)$row->items_count,
+                'total_amount' => number_format((float)$row->total_amount, 2),
+            ];
+        });
+
+    return view('backend.store.browse_ic_categories', [
+        'itemCategoryId'   => $itemCategoryId,
+        'itemCategoryName' => $ic?->name_en ?? ("Item Category #".$itemCategoryId),
+        'rows'             => $rows,
+    ]);
+}
+
+/**
+ * EXISTING: List StoreEntryItems for a product category
+ * UPDATE: accept optional item_category filter via ?ic=ID
+ */
+public function categoryItems(int $categoryId, \Illuminate\Http\Request $request)
+{
+    $search = trim((string)$request->get('search', ''));
+    $from   = $request->date('from');
+    $to     = $request->date('to');
+    $icId   = $request->integer('ic') ?: null;   // NEW optional filter
+
+    $q = StoreEntryItem::query()
+        ->with([
+            'category:id,name',
+            'entry:id,purchase_id',
+            'entry.purchase:id,purchase_sn,purchase_date,supplier_id,purchase_slip_id,remarks',
+            'entry.purchase.supplier:id,name',
+            'entry.purchase.slip:id,po_sn,po_date',
+        ])
+        ->where('category_id', $categoryId);
+
+    if ($icId) {
+        $q->where('item_category_id', $icId);
+    }
+
+    if ($search !== '') {
+        $q->where(function($w) use ($search) {
+            $w->where('item_name', 'like', "%{$search}%")
+              ->orWhere('item_sn', 'like', "%{$search}%")
+              ->orWhereHas('entry.purchase.supplier', fn($s) => $s->where('name', 'like', "%{$search}%"))
+              ->orWhereHas('entry.purchase', fn($p) => $p->where('purchase_sn', 'like', "%{$search}%"))
+              ->orWhereHas('entry.purchase.slip', fn($sl) => $sl->where('po_sn', 'like', "%{$search}%"));
+        });
+    }
+
+    if ($from) {
+        $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '>=', $from));
+    }
+    if ($to) {
+        $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '<=', $to));
+    }
+
+    $items = $q->orderBy('id', 'desc')->paginate(20)->appends($request->only('search','from','to','ic'));
+
+    $categoryName = Category::find($categoryId)?->name ?? "Category #{$categoryId}";
+    $icName = $icId ? (ItemCategory::find($icId)?->name_en ?? "Item Category #{$icId}") : null;
+
+    return view('backend.store.category_items', [
+        'categoryId'   => $categoryId,
+        'categoryName' => $categoryName,
+        'items'        => $items,
+        'filters'      => [
+            'search' => $search,
+            'from'   => $from ? $from->format('Y-m-d') : null,
+            'to'     => $to   ? $to->format('Y-m-d')   : null,
+            'ic'     => $icId,
+            'icName' => $icName,
+        ],
+    ]);
+}
+
+
+
+
+}
+
+

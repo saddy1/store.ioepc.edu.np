@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="{{asset('bs-datepicker.js')}}" ></script>
     @vite('resources/css/app.css')
 
 </head>
@@ -19,7 +20,7 @@
         <div class="h-full px-4 md:px-6 flex items-center justify-between">
             <a href="{{ url('/') }}" class="flex items-center gap-2">
                 <img src="{{ asset('asset/assets/ioe_logo.png') }}" class="h-10 w-auto" alt="Logo">
-                <span class="text-lg md:text-xl font-bold text-blue-900">IOE Purwanchal Campus</span>
+                <span class="text-lg md:text-xl font-bold text-blue-900"> STORE IOEPC</span>
             </a>
 
             <div class="flex items-center gap-2">
@@ -93,27 +94,55 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{route('bank.index')}}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-bank w-5 text-gray-300"></i><span>Bank Data</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('students.import.form') }}"
+                        <a href="{{ route('suppliers.index') }}"
                             class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-users w-5 text-gray-300"></i><span>Student</span>
+                            <i class="fa fa-bank w-5 text-gray-300"></i><span>Suppliers</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#bills" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-file-invoice w-5 text-gray-300"></i><span>Fee</span>
+                        <a href="{{ route('categories.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fas fa-users w-5 text-gray-300"></i><span>Items Category</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{route('applications.index')}}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-file w-5 text-gray-300"></i><span>Applications</span>
+                        <a href="{{ route('product_categories.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fas fa-file-invoice w-5 text-gray-300"></i><span>Product Category</span>
                         </a>
                     </li>
-                    
+                    <li>
+                        <a href="{{ route('brands.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fa fa-file w-5 text-gray-300"></i><span>Brand</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('department.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fa fa-file w-5 text-gray-300"></i><span>Departments</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('store.ledger') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fa fa-file w-5 text-gray-300"></i><span>Product</span>
+                        </a>
+                    </li>
+
+                         <li>
+                        <a href="{{ route('slips.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fa fa-file w-5 text-gray-300"></i><span>माग फारम</span>
+                        </a>
+                    </li>
+                     <li>
+                        <a href="{{ route('purchases.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fa fa-file w-5 text-gray-300"></i><span>स्टोर प्राप्ति</span>
+                        </a>
+                    </li>
+
                     <li>
                         <a href="#settings" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
                             <i class="fas fa-cog w-5 text-gray-300"></i><span>Settings</span>
@@ -126,7 +155,7 @@
 
     <!-- MAIN (never sits under header; only shifts when sidebar is present) -->
     <main class="pt-16 lg:ml-64 min-h-screen px-4 md:px-6">
-        @if (session('success'))
+        {{-- @if (session('success'))
             <div class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3">
                 {{ session('success') }}
             </div>
@@ -135,7 +164,7 @@
             <div class="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3">
                 {{ session('error') }}
             </div>
-        @endif
+        @endif --}}
 
         @yield('content')
     </main>
@@ -179,7 +208,38 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeSidebar();
         });
+
     </script>
+    <script>
+  (function () {
+    function toMasked(value) {
+      let d = (value || '').replace(/\D/g, '').slice(0, 8); // YYYYMMDD
+      const y = d.slice(0,4), m = d.slice(4,6), day = d.slice(6,8);
+
+      if (d.length === 0) return '';
+      if (d.length < 4)   return d;
+      if (d.length === 4) return y + '-';
+      if (d.length < 6)   return y + '-' + m;
+      if (d.length === 6) return y + '-' + m + '-';
+      return y + '-' + m + '-' + day;
+    }
+
+    function attachMask(el) {
+      el.addEventListener('keypress', e => { if (!/[0-9]/.test(e.key)) e.preventDefault(); });
+      el.addEventListener('input', () => {
+        const masked = toMasked(el.value);
+        if (el.value !== masked) el.value = masked;
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      });
+      el.addEventListener('blur', () => { el.value = toMasked(el.value); });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.date-mask').forEach(attachMask);
+    });
+  })();
+</script>
 </body>
 
 </html>

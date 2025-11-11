@@ -22,29 +22,6 @@ class AuthController extends Controller
     }
 
 
-    public function studentLogin(Request $request)
-    {
-        $request->validate([
-            'token_num' => ['required', 'string', 'max:100'],
-            'roll_num' => ['required', 'regex:/^PUR\d{3}[A-Za-z]{3}\d{3}$/'],
-        ], [
-            'roll_num.regex' => 'Roll number must match PUR***###*** (e.g., PUR123ABC456).'
-        ]);
-
-
-        $student = Student::where('token_num', $request->token_num)
-            ->where('roll_num', $request->roll_num)
-            ->first();
-
-
-        if (!$student) {
-            return back()->withInput()->with('error', 'Invalid token or roll number.');
-        }
-
-
-        session(['student_id' => $student->id]);
-        return redirect()->route('student.dashboard');
-    }
 
 
     // ADMIN

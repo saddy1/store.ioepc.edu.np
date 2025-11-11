@@ -17,5 +17,13 @@ class AdminSeeder extends Seeder
                 'contact' => '9843521965',
             ]
         );
+        Admin::updateOrCreate(
+        ['email' => 'cit@ioepc.edu.np'], // unique field
+        [
+            'name' => 'Purwanchal Campus',
+            'password' => bcrypt('Admin@ioepc123'),
+            'contact' => '9843521965',
+        ]
+    );
     }
 }
