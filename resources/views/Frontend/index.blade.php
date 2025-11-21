@@ -21,21 +21,12 @@
 
       <div class="flex items-center gap-2">
         <!-- NEW: Watch How to Apply button -->
-        <button id="openVideoBtn"
-          class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-700 text-blue-700 hover:bg-blue-50 active:bg-blue-100 transition"
-          aria-haspopup="dialog" aria-controls="videoDialog">
-          <i class="fa-solid fa-circle-play"></i>
-          <span>Watch How to Apply</span>
-        </button>
+        
 
         <!-- Mobile icon-only -->
-        <button id="openVideoBtnSm"
-          class="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-blue-700 text-blue-700 hover:bg-blue-50 active:bg-blue-100 transition"
-          aria-label="Watch How to Apply" aria-haspopup="dialog" aria-controls="videoDialog">
-          <i class="fa-solid fa-circle-play"></i>
-        </button>
+        
 
-        <a href="{{ route('student.login.form') }}"
+        <a href="{{ route('employee.login') }}"
            class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition">
           Login
         </a>
@@ -47,12 +38,12 @@
     <main class="flex-grow flex items-center justify-center bg-gradient-to-r from-blue-50 to-slate-100 pt-16">
       <div class="text-center px-6">
         <h1 class="text-3xl sm:text-5xl font-bold text-blue-900 mb-4">
-          Welcome to Student Portal
+          Welcome to Smart Store Management Portal
         </h1>
         <p class="text-gray-600 text-lg sm:text-xl mb-6">
-          Submit online for Exam Registration at IOE Purwanchal Campus
+          Login To See Your Dashboard
         </p>
-        <a href="{{ route('student.login.form') }}"
+        <a href="{{ route('employee.login') }}"
            class="px-6 py-3 bg-blue-700 text-white rounded-xl shadow hover:bg-blue-800 transition">
           Get Started
         </a>

@@ -113,7 +113,7 @@
 <!-- Printable content -->
 <div class="a4" id="printable">
     <!-- Top-right code -->
-    <div class="text-right text-xs text-gray-700 mb-2">त्रि. वि फा. नं. १७</div>
+    <div class="text-center text-xs text-gray-700 mb-2">त्रि. वि फा. नं. १७</div>
 
     <!-- Header -->
     <div class="text-center leading-tight mb-6">
@@ -145,17 +145,17 @@
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto text-center">
         <table class="w-full border border-black border-collapse text-sm leading-snug">
             <thead>
                 <tr>
                     <th class="border border-black px-2 py-1 text-center w-10">सि.नं</th>
-                    <th class="border border-black px-2 py-1 text-left w-56">मालसामानको विवरण</th>
+                    <th class="border border-black px-2 py-1 text-center w-56">मालसामानको विवरण</th>
                     <th class="border border-black px-2 py-1 text-center w-14">एकाई</th>
-                    <th class="border border-black px-2 py-1 text-right w-20">न्यूनतम मौज्दात</th>
-                    <th class="border border-black px-2 py-1 text-right w-20">स्टोर मौज्दात</th>
-                    <th class="border border-black px-2 py-1 text-right w-20">आवश्यक परिमाण</th>
-                    <th class="border border-black px-2 py-1 text-right w-24">रकम</th>
+                    <th class="border border-black px-2 py-1 text-center w-20">न्यूनतम मौज्दात</th>
+                    <th class="border border-black px-2 py-1 text-center w-20">स्टोर मौज्दात</th>
+                    <th class="border border-black px-2 py-1 text-center w-20">आवश्यक परिमाण</th>
+                    <th class="border border-black px-2 py-1 text-center w-24">रकम</th>
                     <th class="border border-black px-2 py-1 text-center w-20">बजेट कोड नं.</th>
                     <th class="border border-black px-2 py-1 text-center w-16">कैफियत</th>
                 </tr>
@@ -176,10 +176,10 @@
                         <td class="border border-black text-center">{{ $row['sn'] }}</td>
                         <td class="border border-black px-2 break-words">{{ $row['desc'] }}</td>
                         <td class="border border-black text-center">{{ $row['unit'] ?? '—' }}</td>
-                        <td class="border border-black text-right">{{ $row['min_stock'] ?? '—' }}</td>
-                        <td class="border border-black text-right">{{ $row['store_bal'] ?? '—' }}</td>
-                        <td class="border border-black text-right">{{ $row['required'] ?? '—' }}</td>
-                        <td class="border border-black text-right">{{ $row['amount'] ?? '—' }}</td>
+                        <td class="border border-black text-center">{{ $row['min_stock'] ?? '—' }}</td>
+                        <td class="border border-black text-center">{{ $row['store_bal'] ?? '—' }}</td>
+                        <td class="border border-black text-center">{{ $row['required'] ?? '—' }}</td>
+                        <td class="border border-black text-center">{{ $row['amount'] ?? '—' }}</td>
                         <td class="border border-black text-center">{{ $row['budget'] ?? '—' }}</td>
 
                         @if ($i === 0)
@@ -200,8 +200,8 @@
 
                 @if (count($items))
                     <tr class="font-semibold">
-                        <td colspan="6" class="border border-black text-right px-3 py-2">जम्मा रकम</td>
-                        <td class="border border-black text-right px-3 py-2">{{ number_format($total, 2) }}</td>
+                        <td colspan="6" class="border border-black text-center px-3 py-2">जम्मा रकम</td>
+                        <td class="border border-black text-center px-3 py-2">{{ number_format($total, 2) }}</td>
                         <td colspan="2" class="border border-black"></td>
                     </tr>
                 @endif

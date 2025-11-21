@@ -171,10 +171,10 @@ class PurchaseSlipController extends Controller
 
         // If you need purchased qty by product from purchases linked to this slip:
         $purchasedByProduct = PurchaseSlip::query()
-            ->selectRaw('product_id, SUM(qty) as qty')
+            ->selectRaw(' SUM(qty) as qty')
             ->whereHas('purchase', fn($p) => $p->where('purchase_slip_id', $slip->id))
-            ->groupBy('product_id')
-            ->pluck('qty', 'product_id');
+        
+            ->pluck('qty');
 
         return view('backend.slips.show', [
             'slip' => $slip,

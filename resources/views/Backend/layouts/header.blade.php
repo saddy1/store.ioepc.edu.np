@@ -102,7 +102,7 @@
                     <li>
                         <a href="{{ route('categories.index') }}"
                             class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-users w-5 text-gray-300"></i><span>Items Category</span>
+                            <i class="fa fa-list-alt text-gray-300" aria-hidden="true" ></i><span>Items Category</span>
                         </a>
                     </li>
                     <li>
@@ -120,26 +120,31 @@
                     <li>
                         <a href="{{ route('department.index') }}"
                             class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-file w-5 text-gray-300"></i><span>Departments</span>
+                            <i class="fas fa-building  w-5 text-gray-300"></i><span>Departments</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('store.ledger') }}"
                             class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-file w-5 text-gray-300"></i><span>Product</span>
+                           <i class="fas fa-drum-steelpan"></i><span>Product</span>
                         </a>
                     </li>
 
                          <li>
                         <a href="{{ route('slips.index') }}"
                             class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-file w-5 text-gray-300"></i><span>माग फारम</span>
+                            <i class=" fas fa-book text-gray-300"></i><span>माग फारम</span>
                         </a>
                     </li>
                      <li>
                         <a href="{{ route('purchases.index') }}"
                             class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
                             <i class="fa fa-file w-5 text-gray-300"></i><span>स्टोर प्राप्ति</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('employees.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fas fa-cog w-5 text-gray-300"></i><span>Staff</span>
                         </a>
                     </li>
 

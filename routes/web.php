@@ -18,7 +18,10 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\BSCalendarController;
 use App\Http\Controllers\StoreEntryController;
-
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeAuthController;
+use App\Http\Controllers\StoreOutController;
+use App\Http\Controllers\EmployeeStoreOutController;
 
 // Purchase Slips
 
@@ -113,36 +116,66 @@ Route::group(['middleware' => 'admin.auth'], function () {
         Route::get('/store/ledger/category/{category}', [StoreEntryController::class, 'ledgerByCategory'])
             ->name('ledger.category');
 
-            route::get('/store/ledger',                 [StoreEntryController::class, 'ledger'])->name('ledger');
-                Route::get('/categories/{category}/items',  [StoreEntryController::class, 'categoryItems'])->name('categories.items');
+        route::get('/store/ledger',                 [StoreEntryController::class, 'ledger'])->name('ledger');
+        Route::get('/categories/{category}/items',  [StoreEntryController::class, 'categoryItems'])->name('categories.items');
 
         Route::get('/categories/{category}',        [StoreEntryController::class, 'ledgerByCategory'])->name('categories.show');
 
 
-         Route::get('/browse',                                                         [StoreEntryController::class, 'browseRoot'])->name('browse');
-    Route::get('/browse/item-category',                                           [StoreEntryController::class, 'browseItemCategories'])->name('browse.ic');
-    Route::get('/browse/item-category/{itemCategory}/product-categories',         [StoreEntryController::class, 'browseProductCategoriesUnderIC'])->name('browse.ic.categories');
+        Route::get('/browse',                                                         [StoreEntryController::class, 'browseRoot'])->name('browse');
+        Route::get('/browse/item-category',                                           [StoreEntryController::class, 'browseItemCategories'])->name('browse.ic');
+        Route::get('/browse/item-category/{itemCategory}/product-categories',         [StoreEntryController::class, 'browseProductCategoriesUnderIC'])->name('browse.ic.categories');
     });
 
 
     Route::get('/slips/{slip}/print', [PurchaseSlipController::class, 'print'])
         ->name('slips.print');
 
-
-     Route::get('/products/search', [PurchaseSlipController::class, 'productSearch'])
+    Route::get('/products/search', [PurchaseSlipController::class, 'productSearch'])
         ->name('products.search');
-
 
     Route::resource('products', ProductController::class);
     Route::resource('slips', PurchaseSlipController::class);
 
-
-
-   
-
     Route::resource('purchases', PurchaseController::class);
+
+
+    Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
+
+    Route::resource('employees', EmployeeController::class);
+
+
+Route::get('/employee/store-out', [EmployeeStoreOutController::class, 'index'])
+        ->name('employee.store_out.index');
+
+    Route::prefix('store')->name('store.')->group(function () {
+        // ... your existing store routes ...
+
+        Route::get('/out',          [StoreOutController::class, 'index'])->name('out.index');
+        Route::get('/out/create',   [StoreOutController::class, 'create'])->name('out.create');
+        Route::post('/out',         [StoreOutController::class, 'store'])->name('out.store');
+        Route::get('/out/{storeOut}', [StoreOutController::class, 'show'])->name('out.show');
+    });
 });
 
 
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+//EMployee Routes Begin
+Route::get('/employee/login', [EmployeeAuthController::class, 'showLogin'])->name('employee.login');
+Route::post('/employee/login', [EmployeeAuthController::class, 'login'])->name('employee.login.post');
+Route::post('/employee/logout', [EmployeeAuthController::class, 'logout'])->name('employee.logout');
+Route::group(['middleware' => ['auth:employee', 'employee.mustChange']], function () {
+    // Simple dashboard placeholder
+    Route::get('/employee/dashboard', function () {
+        return view('Frontend.employee.dashboard');
+    })->name('employee.dashboard');
+
+    // Force change-password routes
+    Route::get('/employee/change-password', [EmployeeAuthController::class, 'showChangePassword'])
+        ->name('employee.password.show'); // note: this is whitelisted in middleware
+    Route::post('/employee/change-password', [EmployeeAuthController::class, 'updatePassword'])
+        ->name('employee.password.update');
+});
+//Employee Routes End

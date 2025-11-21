@@ -119,6 +119,10 @@
                 <a href="{{ route('store.show', $it->entry) }}" class="text-blue-600 hover:underline text-sm">
                   Store Entry
                 </a>
+                <a href="{{ route('store.out.create', ['item_id' => $it->id]) }}"
+     class="text-emerald-600 hover:underline text-sm">
+    Store OUT
+  </a>
               @endif
             </td>
             

@@ -20,7 +20,7 @@
       </a>
 
       <div class="flex items-center gap-2">
-        @if(session('student_id'))
+        @if(auth('employee')->check())
           <!-- Mobile sidebar toggle -->
           <button id="sidebarToggle"
                   class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100"
@@ -39,18 +39,21 @@
             <button id="profileDropdownBtn"
                     class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100">
               <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
-                {{ strtoupper(mb_substr($student->name,0,1)) }}
+                {{ strtoupper(mb_substr(auth('employee')->user()->full_name,0,1)) }}
               </div>
-              <span class="hidden md:inline-block font-medium">{{ $student->name}}</span>
+              <span class="hidden md:inline-block font-medium">{{ auth('employee')->user()->full_name}}</span>
               <i class="fa-solid fa-chevron-down text-sm text-gray-500"></i>
             </button>
 
             <div id="profileDropdownMenu"
                  class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50">
               <div class="px-4 py-2 text-sm text-gray-600 border-b">
-                Student
+                {{ auth('employee')->user()->email }}
               </div>
-              <form method="POST" action="{{ route('logout') }}">
+              <div class="px-4 py-2 text-sm text-gray-600 border-b">
+                {{ auth('employee')->user()->department->name }}
+              </div>
+              <form method="POST" action="{{  route('employee.logout')}}">
                 @csrf
                 <button type="submit"
                         class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
@@ -60,7 +63,7 @@
             </div>
           </div>
         @else
-          <a href="{{ route('student.login.form') }}"
+          <a href="{{ route('employee.login') }}"
              class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition">
             Login
           </a>
@@ -69,7 +72,7 @@
     </div>
   </header>
 
-  @if(  session('student_id'))
+  @if(auth('employee')->check())
     <!-- SIDEBAR BACKDROP (mobile) -->
     <div id="sidebarBackdrop"
          class="hidden fixed inset-0 bg-black/30 z-40 lg:hidden"></div>
@@ -82,17 +85,17 @@
       <nav class="py-4">
         <ul class="space-y-1 px-3 text-sm">
           <li>
-            <a href="{{ route('student.dashboard') }}"
+            <a href="{{ route('employee.dashboard') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
               <i class="fas fa-tachometer-alt w-5 text-gray-300"></i>
               <span>Dashboard</span>
             </a>
           </li>
-          <li>
+          {{-- <li>
             <a href="{{route('form.show',$student->roll_num)}}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
               <i class="fas fa-tags w-5 text-gray-300"></i><span>Application</span>
             </a>
-          </li>
+          </li> --}}
           {{-- <li>
             <a href="#stock" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
               <i class="fas fa-warehouse w-5 text-gray-300"></i><span>Stock Management</span>
@@ -129,7 +132,7 @@
   @endif
 
   <!-- MAIN (never sits under header; only shifts when sidebar is present) -->
-  <main class="pt-16 {{ $student ? 'lg:ml-64' : '' }} min-h-screen px-4 md:px-6">
+  <main class="pt-16 {{auth('employee')->check() ? 'lg:ml-64' : '' }} min-h-screen px-4 md:px-6">
     
 
     @yield('content')

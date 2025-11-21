@@ -23,8 +23,6 @@
             <td class="px-4 py-3">{{ $slip->department->name ?? '—' }}</td>
             <td class="px-4 py-3 text-right space-x-2">
               <td class="px-4 py-3 text-right space-x-2">
-  <a class="text-blue-600 hover:underline text-sm" href="{{ route('slips.show', $slip) }}">View</a>
-
   @if(($slip->purchases_count ?? 0) > 0)
   <a class="text-indigo-600 hover:underline text-sm" href="{{ route('slips.print', $slip) }}">
       खरिद माग फाराम
