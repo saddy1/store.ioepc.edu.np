@@ -9,6 +9,7 @@
         'item_sn'             => $prefillItem->item_sn,
         'unit'                => $prefillItem->unit,
         'item_category_id'    => $prefillItem->item_category_id,
+        'item_category_name'  => $prefillItem->itemCategory?->name_en,
      ]) : 'null' }})">
 
   <div class="mb-6 flex items-center justify-between">
@@ -48,82 +49,180 @@
                class="w-full rounded-lg border px-3 py-2" required>
       </div>
 
-      {{-- Employee autocomplete --}}
-      <div class="sm:col-span-1">
+      {{-- Employee autocomplete - selection only (same as your code) --}}
+      <div class="sm:col-span-1 relative">
         <label class="block text-sm font-medium mb-1">Employee *</label>
-        <input type="hidden" name="employee_id" x-ref="employeeId">
-        <input type="text"
-               x-ref="employeeSearch"
-               x-model="employeeText"
-               @input="searchEmployee"
-               @keydown.arrow-down.prevent="moveSelection(1)"
-               @keydown.arrow-up.prevent="moveSelection(-1)"
-               @keydown.enter.prevent="chooseSelection"
-               class="w-full rounded-lg border px-3 py-2"
-               placeholder="Type name / email / atten no">
+        <input type="hidden" name="employee_id" x-ref="employeeId" required>
+        <div class="relative">
+          <input type="text"
+                 x-ref="employeeSearch"
+                 x-model="employeeText"
+                 @input="onEmployeeInput"
+                 @blur="onEmployeeBlur"
+                 @focus="employeeText && !selectedEmployeeId ? searchEmployee() : null"
+                 @keydown.arrow-down.prevent="moveSelection(1)"
+                 @keydown.arrow-up.prevent="moveSelection(-1)"
+                 @keydown.enter.prevent="chooseSelection"
+                 @keydown.escape="employeeResults = []"
+                 :class="{'border-green-500 bg-green-50': selectedEmployeeId, 'border-gray-300': !selectedEmployeeId}"
+                 class="w-full rounded-lg border px-3 py-2 pr-8"
+                 placeholder="Type name / email / atten no">
+          {{-- Clear button when employee selected --}}
+          <button type="button"
+                  x-show="selectedEmployeeId"
+                  @click="clearEmployee"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <p x-show="showEmployeeError" x-cloak class="text-xs text-red-500 mt-1">
+          Please select an employee from the list
+        </p>
         <div x-show="employeeResults.length"
-             class="mt-1 border rounded-lg bg-white shadow max-h-40 overflow-auto text-sm">
-          <template x-for="(e,idx) in employeeResults" :key="e.id">
+             x-cloak
+             class="absolute z-10 w-full mt-1 border rounded-lg bg-white shadow-lg max-h-40 overflow-auto text-sm">
+          <template x-for="(e, idx) in employeeResults" :key="e.id">
             <div class="px-3 py-2 cursor-pointer"
-                 :class="idx === activeIndex ? 'bg-gray-100' : ''"
+                 :class="idx === activeIndex ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'"
                  @mousedown.prevent="selectEmployee(idx)">
               <div x-text="e.text"></div>
             </div>
           </template>
         </div>
+        <div x-show="showNoResults"
+             x-cloak
+             class="absolute z-10 w-full mt-1 border rounded-lg bg-white shadow-lg p-3 text-sm text-gray-500">
+          No employees found
+        </div>
       </div>
     </div>
 
-    <div>
-      <label class="block text-sm font-semibold mb-2">Items to issue *</label>
+    {{-- MULTIPLE ITEMS --}}
+    {{-- MULTIPLE ITEMS --}}
+<div>
+  <div class="flex items-center justify-between mb-2">
+    <label class="block text-sm font-semibold">Items to issue *</label>
+    <button type="button"
+            class="text-xs px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50"
+            @click="addRow">
+      + Add Item
+    </button>
+  </div>
 
-      <div class="space-y-2">
-        {{-- For now single item row; you can expand later --}}
-        <div class="grid grid-cols-12 gap-2 items-end">
-          <div class="col-span-4">
-            <label class="block text-xs text-gray-600">Item Name *</label>
-            <input type="text" name="items[0][item_name]"
-                   x-model="item.item_name"
-                   class="w-full rounded-lg border px-3 py-2" required>
+  <div class="space-y-3">
+    <template x-for="(row, index) in items" :key="index">
+      <div class="border rounded-xl p-3 bg-gray-50">
+        <div class="flex justify-between mb-2">
+          <div class="text-xs font-semibold text-gray-600">
+            Item #<span x-text="index + 1"></span>
           </div>
-          <div class="col-span-2">
-            <label class="block text-xs text-gray-600">Detail (SN)</label>
-            <input type="text" name="items[0][item_sn]"
-                   x-model="item.item_sn"
-                   class="w-full rounded-lg border px-3 py-2">
-          </div>
-          <div class="col-span-2">
-            <label class="block text-xs text-gray-600">Unit</label>
-            <input type="text" name="items[0][unit]"
-                   x-model="item.unit"
-                   class="w-full rounded-lg border px-3 py-2">
-          </div>
-          <div class="col-span-2">
-            <label class="block text-xs text-gray-600">Qty *</label>
-            <input type="number" step="0.001" min="0.001"
-                   name="items[0][qty]"
-                   x-model="item.qty"
-                   class="w-full rounded-lg border px-3 py-2" required>
-          </div>
-          <div class="col-span-2">
-            <label class="block text-xs text-gray-600">Category</label>
-            <select name="items[0][item_category_id]"
-                    x-model="item.item_category_id"
-                    class="w-full rounded-lg border px-3 py-2">
-              <option value="">-- Select --</option>
-              @foreach(\App\Models\ItemCategory::orderBy('name_en')->get() as $c)
-                <option value="{{ $c->id }}">{{ $c->name_en }} ({{ $c->name_np }})</option>
-              @endforeach
-            </select>
-          </div>
+          <button type="button"
+                  class="text-xs text-red-500 hover:text-red-700"
+                  @click="removeRow(index)"
+                  x-show="items.length > 1">
+            Remove
+          </button>
         </div>
 
-        {{-- Hidden field for store_entry_item if we came from category item page --}}
-        <template x-if="item.store_entry_item_id">
-          <input type="hidden" name="items[0][store_entry_item_id]" :value="item.store_entry_item_id">
-        </template>
+        <div class="grid grid-cols-12 gap-2 items-end">
+          {{-- 🔍 Search from Store Entry --}}
+          <div class="col-span-4 relative">
+            <label class="block text-xs text-gray-600">Search Item (Store Entry) *</label>
+            <input type="text"
+                   x-model="row.searchText"
+                   @input="onItemInput(index)"
+                   @blur="onItemBlur(index)"
+                   @keydown.arrow-down.prevent="moveItemSelection(index, 1)"
+                   @keydown.arrow-up.prevent="moveItemSelection(index, -1)"
+                   @keydown.enter.prevent="chooseItemSelection(index)"
+                   @keydown.escape="row.searchResults = []"
+                   class="w-full rounded-lg border px-2 py-1.5 text-xs"
+                   placeholder="Type item name / SN">
+            {{-- Dropdown --}}
+            <div x-show="row.searchResults.length"
+                 x-cloak
+                 class="absolute z-10 w-full mt-1 border rounded-lg bg-white shadow-lg max-h-40 overflow-auto text-xs">
+              <template x-for="(it, idx2) in row.searchResults" :key="it.id">
+                <div class="px-2 py-1.5 cursor-pointer"
+                     :class="idx2 === row.searchActiveIndex ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'"
+                     @mousedown.prevent="selectItem(index, idx2)">
+                  <div x-text="it.text"></div>
+                </div>
+              </template>
+            </div>
+            <div x-show="row.showSearchNoResults"
+                 x-cloak
+                 class="absolute z-10 w-full mt-1 border rounded-lg bg-white shadow-lg p-2 text-xs text-gray-500">
+              No items found
+            </div>
+          </div>
+
+          {{-- Hidden ID actually submitted --}}
+          <input type="hidden"
+                 :name="`items[${index}][store_entry_item_id]`"
+                 x-model="row.store_entry_item_id">
+
+          {{-- Item Name (locked) --}}
+          <div class="col-span-4">
+            <label class="block text-xs text-gray-600">Item Name (locked)</label>
+            <input type="text"
+                   :name="`items[${index}][item_name]`"
+                   x-model="row.item_name"
+                   class="w-full rounded-lg border px-2 py-1.5 text-xs bg-gray-100 cursor-not-allowed"
+                   readonly>
+          </div>
+
+          {{-- SN / Detail (locked) --}}
+          <div class="col-span-2">
+            <label class="block text-xs text-gray-600">Detail (SN)</label>
+            <input type="text"
+                   :name="`items[${index}][item_sn]`"
+                   x-model="row.item_sn"
+                   class="w-full rounded-lg border px-2 py-1.5 text-xs bg-gray-100 cursor-not-allowed"
+                   readonly>
+          </div>
+
+          {{-- Unit (locked) --}}
+          <div class="col-span-2">
+            <label class="block text-xs text-gray-600">Unit</label>
+            <input type="text"
+                   :name="`items[${index}][unit]`"
+                   x-model="row.unit"
+                   class="w-full rounded-lg border px-2 py-1.5 text-xs bg-gray-100 cursor-not-allowed"
+                   readonly>
+          </div>
+
+          {{-- Qty --}}
+          <div class="col-span-2">
+            <label class="block text-xs text-gray-600">Qty *</label>
+            <input type="number"
+                   step="0.001" min="0.001"
+                   :name="`items[${index}][qty]`"
+                   x-model="row.qty"
+                   class="w-full rounded-lg border px-2 py-1.5 text-xs"
+                   required>
+          </div>
+
+          {{-- Category (locked) --}}
+          <div class="col-span-3 mt-2">
+            <label class="block text-xs text-gray-600">Category</label>
+            <input type="hidden"
+                   :name="`items[${index}][item_category_id]`"
+                   x-model="row.item_category_id">
+            <input type="text"
+                   x-model="row.item_category_name"
+                   class="w-full rounded-lg border px-2 py-1.5 text-xs bg-gray-100 cursor-not-allowed"
+                   placeholder="--"
+                   readonly>
+          </div>
+        </div>
       </div>
-    </div>
+    </template>
+  </div>
+</div>
+
 
     <div>
       <label class="block text-sm font-medium mb-1">Remarks</label>
@@ -133,7 +232,9 @@
     </div>
 
     <div class="flex justify-end">
-      <button class="rounded-xl bg-gray-900 text-white px-5 py-2.5 text-sm font-semibold hover:bg-gray-800">
+      <button type="submit"
+              @click="validateEmployee"
+              class="rounded-xl bg-gray-900 text-white px-5 py-2.5 text-sm font-semibold hover:bg-gray-800">
         Save Store OUT
       </button>
     </div>
@@ -145,27 +246,160 @@
 <script>
 function storeOutForm() {
   return {
+    // ==== EMPLOYEE SEARCH (same as before) ====
     employeeText: '',
     employeeResults: [],
     activeIndex: -1,
     employeeSearchTimer: null,
-    item: {
-      store_entry_item_id: null,
-      item_name: '',
-      item_sn: '',
-      unit: '',
-      qty: '',
-      item_category_id: '',
+    selectedEmployeeId: null,
+    showEmployeeError: false,
+    showNoResults: false,
+
+    // ==== MULTIPLE ITEMS ====
+    items: [],
+
+    blankItem() {
+      return {
+        store_entry_item_id: '',
+        item_name: '',
+        item_sn: '',
+        unit: '',
+        qty: '',
+        item_category_id: '',
+        item_category_name: '',
+        // search state per row
+        searchText: '',
+        searchResults: [],
+        searchTimer: null,
+        searchActiveIndex: -1,
+        showSearchNoResults: false,
+      };
     },
 
     init(prefill) {
       if (prefill) {
-        this.item.store_entry_item_id = prefill.store_entry_item_id;
-        this.item.item_name           = prefill.item_name || '';
-        this.item.item_sn             = prefill.item_sn || '';
-        this.item.unit                = prefill.unit || '';
-        this.item.item_category_id    = prefill.item_category_id || '';
+        const row = this.blankItem();
+        row.store_entry_item_id = prefill.store_entry_item_id;
+        row.item_name           = prefill.item_name || '';
+        row.item_sn             = prefill.item_sn || '';
+        row.unit                = prefill.unit || '';
+        row.item_category_id    = prefill.item_category_id || '';
+        row.item_category_name  = prefill.item_category_name || '';
+        row.searchText          = prefill.item_name || '';
+        this.items = [row];
+      } else {
+        this.items = [this.blankItem()];
       }
+    },
+
+    addRow() {
+      this.items.push(this.blankItem());
+    },
+
+    removeRow(index) {
+      if (this.items.length > 1) {
+        this.items.splice(index, 1);
+      }
+    },
+
+    // ==== ITEM SEARCH (from StoreEntryItem) ====
+    onItemInput(index) {
+      const row = this.items[index];
+      if (!row) return;
+
+      if (row.searchTimer) clearTimeout(row.searchTimer);
+      row.searchTimer = setTimeout(() => this.searchItem(index), 200);
+    },
+
+    onItemBlur(index) {
+      const row = this.items[index];
+      if (!row) return;
+
+      setTimeout(() => {
+        row.searchResults = [];
+        row.showSearchNoResults = false;
+      }, 200);
+    },
+
+    searchItem(index) {
+      const row = this.items[index];
+      if (!row) return;
+
+      const term = row.searchText.trim();
+      if (!term) {
+        row.searchResults = [];
+        row.searchActiveIndex = -1;
+        row.showSearchNoResults = false;
+        return;
+      }
+
+      fetch(`{{ route('store.entry-items.search') }}?q=${encodeURIComponent(term)}`, {
+        headers: { 'Accept': 'application/json' }
+      })
+        .then(r => r.ok ? r.json() : [])
+        .then(json => {
+          row.searchResults = Array.isArray(json) ? json : [];
+          row.searchActiveIndex = row.searchResults.length ? 0 : -1;
+          row.showSearchNoResults = row.searchResults.length === 0 && term.length > 0;
+        })
+        .catch(() => {
+          row.searchResults = [];
+          row.searchActiveIndex = -1;
+          row.showSearchNoResults = true;
+        });
+    },
+
+    moveItemSelection(index, step) {
+      const row = this.items[index];
+      if (!row || !row.searchResults.length) return;
+      const len = row.searchResults.length;
+      row.searchActiveIndex = (row.searchActiveIndex + step + len) % len;
+    },
+
+    chooseItemSelection(index) {
+      const row = this.items[index];
+      if (!row) return;
+      if (row.searchActiveIndex >= 0 && row.searchResults[row.searchActiveIndex]) {
+        this.selectItem(index, row.searchActiveIndex);
+      }
+    },
+
+    selectItem(index, idx2) {
+      const row = this.items[index];
+      if (!row) return;
+      const it = row.searchResults[idx2];
+      if (!it) return;
+
+      row.store_entry_item_id = it.id;
+      row.item_name           = it.item_name;
+      row.item_sn             = it.item_sn;
+      row.unit                = it.unit;
+      row.item_category_id    = it.item_category_id;
+      row.item_category_name  = it.item_category_name;
+      row.searchText          = it.text;
+
+      row.searchResults = [];
+      row.searchActiveIndex = -1;
+      row.showSearchNoResults = false;
+    },
+
+    // ==== EMPLOYEE SEARCH (same as you had) ====
+    onEmployeeInput() {
+      if (this.selectedEmployeeId) {
+        this.clearEmployee();
+      }
+      this.showEmployeeError = false;
+      this.searchEmployee();
+    },
+
+    onEmployeeBlur() {
+      setTimeout(() => {
+        this.employeeResults = [];
+        this.showNoResults = false;
+        if (!this.selectedEmployeeId && this.employeeText) {
+          this.showEmployeeError = true;
+        }
+      }, 200);
     },
 
     searchEmployee() {
@@ -174,8 +408,8 @@ function storeOutForm() {
 
       if (!term) {
         this.employeeResults = [];
+        this.showNoResults = false;
         this.activeIndex = -1;
-        this.$refs.employeeId.value = '';
         return;
       }
 
@@ -187,10 +421,12 @@ function storeOutForm() {
         .then(json => {
           this.employeeResults = Array.isArray(json) ? json : [];
           this.activeIndex = this.employeeResults.length ? 0 : -1;
+          this.showNoResults = this.employeeResults.length === 0 && term.length > 0;
         })
         .catch(() => {
           this.employeeResults = [];
           this.activeIndex = -1;
+          this.showNoResults = true;
         });
       }, 200);
     },
@@ -210,11 +446,32 @@ function storeOutForm() {
       const e = this.employeeResults[idx];
       if (!e) return;
       this.$refs.employeeId.value = e.id;
+      this.selectedEmployeeId = e.id;
       this.employeeText = e.text;
       this.employeeResults = [];
       this.activeIndex = -1;
+      this.showEmployeeError = false;
+      this.showNoResults = false;
+    },
+
+    clearEmployee() {
+      this.$refs.employeeId.value = '';
+      this.selectedEmployeeId = null;
+      this.employeeText = '';
+      this.employeeResults = [];
+      this.activeIndex = -1;
+      this.$refs.employeeSearch.focus();
+    },
+
+    validateEmployee(e) {
+      if (!this.selectedEmployeeId) {
+        e.preventDefault();
+        this.showEmployeeError = true;
+        this.$refs.employeeSearch.focus();
+      }
     }
   }
 }
 </script>
 @endpush
+

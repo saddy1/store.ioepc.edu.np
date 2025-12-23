@@ -1,9 +1,11 @@
 <?php
 
+// app/Models/StoreOutItem.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
 
 class StoreOutItem extends Model
 {
@@ -17,20 +19,23 @@ class StoreOutItem extends Model
         'item_sn',
         'unit',
         'qty',
+        'returned_at',
     ];
 
-    public function storeOut(): BelongsTo
+    protected $dates = ['returned_at'];
+
+    public function entryItem()
     {
-        return $this->belongsTo(StoreOut::class);
+        return $this->belongsTo(StoreEntryItem::class, 'store_entry_item_id');
     }
 
-    public function storeEntryItem(): BelongsTo
+    public function storeOut()
     {
-        return $this->belongsTo(StoreEntryItem::class);
+        return $this->belongsTo(StoreOut::class, 'store_out_id');
     }
 
-    public function itemCategory(): BelongsTo
+    public function scopeActive(Builder $q): Builder
     {
-        return $this->belongsTo(ItemCategory::class);
+        return $q->whereNull('returned_at');
     }
 }

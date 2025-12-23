@@ -44,7 +44,9 @@ class AuthController extends Controller
 
         $admin = Admin::where('email', $request->email)->first();
         if (!$admin || !Hash::check($request->password, $admin->password)) {
-            return back()->withInput()->with('error', 'Invalid credentials.');
+           return back()
+        ->withErrors(['email' => 'Invalid email or password.'])
+        ->withInput();
         }
 
 

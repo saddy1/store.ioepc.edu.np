@@ -1,32 +1,33 @@
 <?php
 
+// app/Models/StoreOut.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StoreOut extends Model
 {
     protected $fillable = [
         'employee_id',
+        'department_id',
         'store_entry_id',
         'store_out_sn',
         'store_out_date_bs',
         'remarks',
     ];
 
-    public function employee(): BelongsTo
+    public function employee()
     {
         return $this->belongsTo(Employee::class);
     }
 
-    public function entry(): BelongsTo
+    public function department()
     {
-        return $this->belongsTo(StoreEntry::class, 'store_entry_id');
+        return $this->belongsTo(Department::class);
     }
 
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany(StoreOutItem::class);
     }

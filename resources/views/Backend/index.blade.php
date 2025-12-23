@@ -21,14 +21,6 @@
                 <span class="text-lg md:text-xl font-bold text-blue-900"> STORE IOE Purwanchal Campus</span>
             </a>
 
-            <div class="flex items-center gap-2">
-
-                <a href="{{ route('student.login.form') }}"
-                    class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition">
-                    Login
-                </a>
-
-            </div>
         </div>
     </header>
 

@@ -12,32 +12,36 @@ use Illuminate\Validation\Rule;
 class EmployeeController extends Controller
 {
     public function search(Request $request)
-    {
-        $q = trim((string)$request->get('q',''));
-        if ($q === '') {
-            return response()->json([]);
-        }
-
-        $employees = Employee::query()
-            ->where(function ($w) use ($q) {
-                $w->where('full_name','like',"%{$q}%")
-                  ->orWhere('email','like',"%{$q}%")
-                  ->orWhere('atten_no','like',"%{$q}%");
-            })
-            ->orderBy('full_name')
-            ->limit(15)
-            ->get(['id','full_name','email','atten_no','employee_type']);
-
-        return response()->json(
-            $employees->map(fn($e) => [
-                'id'   => $e->id,
-                'text' => $e->full_name
-                         . ($e->employee_type ? " ({$e->employee_type})" : '')
-                         . ($e->atten_no ? " [{$e->atten_no}]" : ''),
-                'email' => $e->email,
-            ])
-        );
+{
+    $q = trim($request->get('q', ''));
+    
+    if (strlen($q) < 1) {
+        return response()->json([]);
     }
+    
+    $employees = Employee::query()
+        ->where(function ($query) use ($q) {
+            $query->where('full_name', 'like', "%{$q}%")
+                  ->orWhere('email', 'like', "%{$q}%")
+                  ->orWhere('atten_no', 'like', "%{$q}%");
+        })
+        ->limit(10)
+        ->get(['id', 'full_name', 'email', 'atten_no']);
+    
+    // Format for the frontend autocomplete
+    $results = $employees->map(function ($e) {
+        $parts = [$e->full_name];
+        if ($e->email) $parts[] = $e->email;
+        if ($e->atten_no) $parts[] = "#{$e->atten_no}";
+        
+        return [
+            'id'   => $e->id,
+            'text' => implode(' - ', $parts),
+        ];
+    });
+    
+    return response()->json($results);
+}
     public function index(Request $request)
     {
         $q = Employee::query()->with('department')->latest();
