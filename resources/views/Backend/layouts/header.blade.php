@@ -142,6 +142,12 @@
                             <i class="fa fa-file w-5 text-gray-300"></i><span>स्टोर प्राप्ति</span>
                         </a>
                     </li>
+                     <li>
+                        <a href="{{ route('store.out.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
+                            <i class="fa fa-file w-5 text-gray-300"></i><span>स्टोर kharcha</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ route('employees.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
                             <i class="fas fa-cog w-5 text-gray-300"></i><span>Staff</span>

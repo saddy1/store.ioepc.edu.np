@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/StoreOut.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -11,24 +9,23 @@ class StoreOut extends Model
     protected $fillable = [
         'employee_id',
         'department_id',
-        'store_entry_id',
         'store_out_sn',
         'store_out_date_bs',
         'remarks',
     ];
 
-    public function employee()
+    public function items()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->hasMany(\App\Models\StoreOutItem::class, 'store_out_id');
     }
 
     public function department()
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(\App\Models\Department::class, 'department_id');
     }
 
-    public function items()
+    public function employee()
     {
-        return $this->hasMany(StoreOutItem::class);
+        return $this->belongsTo(\App\Models\Employee::class, 'employee_id');
     }
 }

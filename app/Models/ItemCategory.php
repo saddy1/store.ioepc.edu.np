@@ -9,18 +9,21 @@ class ItemCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name_en',
-        'name_np',
-        'type', 
-    ];
+    protected $fillable = ['name_en', 'name_np', 'type'];
+
+    // type: 0 = consumable, 1 = non-consumable
     public function isConsumable(): bool
     {
-        return strcasecmp((string)$this->type, 'Consumable') === 0;
+        return (int) $this->type === 0;
     }
 
     public function isNonConsumable(): bool
     {
-        return !$this->isConsumable();
+        return (int) $this->type === 1;
+    }
+
+    public function typeLabel(): string
+    {
+        return $this->isConsumable() ? 'Consumable' : 'Non-Consumable';
     }
 }

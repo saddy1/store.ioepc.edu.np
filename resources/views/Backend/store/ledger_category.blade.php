@@ -2,10 +2,7 @@
 @section('content')
     <style>
         /* ----------- PRINT (A4 Landscape) ----------- */
-        @page {
-            size: A4 landscape;
-            margin: 14mm 12mm;
-        }
+        @page { size: A4 landscape; margin: 14mm 12mm; }
 
         /* ----------- BASE STYLES ----------- */
         body {
@@ -13,7 +10,6 @@
             color: #111;
             overflow-x: hidden;
         }
-
         .a4 {
             width: 100%;
             max-width: 100%;
@@ -22,27 +18,17 @@
             padding: 1rem;
             box-sizing: border-box;
         }
-
-        .line {
-            border-top: 1px solid #000;
-            margin: 6px 0 12px;
-        }
+        .line { border-top: 1px solid #000; margin: 6px 0 12px; }
 
         @media screen {
-            body {
-                background: #f9fafb;
-                padding: 24px;
-            }
-
+            body { background: #f9fafb; padding: 24px; }
             .a4 {
                 background: #fff;
                 padding: 16px;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
                 border-radius: 8px;
                 overflow-x: auto;
-                /* ✅ allows horizontal scroll if table overflows */
             }
-
             .printbar {
                 display: flex;
                 justify-content: space-between;
@@ -51,9 +37,7 @@
                 margin-bottom: 16px;
                 flex-wrap: wrap;
             }
-
-            .printbar a,
-            .printbar button {
+            .printbar a, .printbar button {
                 padding: 8px 16px;
                 border: 1px solid #d1d5db;
                 border-radius: 8px;
@@ -61,90 +45,42 @@
                 font-size: 14px;
                 white-space: nowrap;
             }
-
-            .printbar a:hover,
-            .printbar button:hover {
-                background: #f3f4f6;
-            }
+            .printbar a:hover, .printbar button:hover { background: #f3f4f6; }
         }
 
         /* ----------- PRINT ONLY ----------- */
         @media print {
-
-            .printbar,
-            header,
-            nav,
-            aside,
-            .sidebar,
-            .navbar,
-            .app-header,
-            .app-footer,
-            .site-header,
-            .site-footer {
+            .printbar, header, nav, aside, .sidebar, .navbar, .app-header, .app-footer, .site-header, .site-footer {
                 display: none !important;
             }
+            body * { visibility: hidden !important; }
+            #printable, #printable * { visibility: visible !important; }
 
-            body * {
-                visibility: hidden !important;
-            }
-
-            #printable,
-            #printable * {
-                visibility: visible !important;
-            }
-
-            body {
-                padding: 0 !important;
-                background: #fff !important;
-                overflow: visible !important;
-            }
-
+            body { padding: 0 !important; background: #fff !important; overflow: visible !important; }
             #printable {
                 position: absolute;
-                left: 0;
-                top: 0;
+                left: 0; top: 0;
                 width: 100%;
                 margin: 0 !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
                 padding: 0 !important;
             }
-
-            footer {
-                position: fixed;
-                bottom: 14mm;
-                left: 0;
-                right: 0;
-            }
+            footer { position: fixed; bottom: 14mm; left: 0; right: 0; }
         }
 
         /* ----------- TABLE ----------- */
-        table.ledger {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: auto;
-        }
-
-        table.ledger th,
-        table.ledger td {
+        table.ledger { width: 100%; border-collapse: collapse; table-layout: auto; }
+        table.ledger th, table.ledger td {
             border: 1px solid #000;
             padding: 4px 6px;
             font-size: 12px;
             line-height: 1.3;
             word-break: break-word;
         }
-
-        .tcenter {
-            text-align: center;
-        }
-
-        .tright {
-            text-align: right;
-        }
-
-        .small {
-            font-size: 11px;
-        }
+        .tcenter { text-align: center; }
+        .tright { text-align: right; }
+        .small { font-size: 11px; }
     </style>
 
     <div class="printbar">
@@ -166,9 +102,10 @@
             <div class="small">त्रिभुवन विश्वविद्यालय</div>
             <div style="font-weight:700;">पूर्वाञ्चल क्याम्पस, धरान</div>
             <div style="font-weight:700; margin-top:4px;">स्टोर श्रेणीगत खाता (Category Ledger)</div>
+
             <div class="text-2xl text-left" style="margin-top:4px;">
-                श्रेणी: <b>{{ $meta['category_name'] }}</b>
-                @if ($meta['from'] || $meta['to'])
+                श्रेणी: <b>{{ $meta['category_name'] ?? '—' }}</b>
+                @if (($meta['from'] ?? null) || ($meta['to'] ?? null))
                     — अवधि: <b>{{ $meta['from'] ?? '…' }}</b> देखि <b>{{ $meta['to'] ?? '…' }}</b>
                 @endif
             </div>
@@ -178,76 +115,91 @@
             <table class="ledger min-w-max">
                 <thead>
                     <tr>
-                        <th colspan="8" class="tcenter" style="width:40px;">आम्दानी </th>
-                        <th colspan="5" class="tcenter" style="width:40px;">kharcha </th>
-                        <th colspan="5" class="tcenter" style="width:40px;">Baki </th>
-
+                        <th colspan="8" class="tcenter">आम्दानी</th>
+                        <th colspan="5" class="tcenter">खर्च</th>
+                        <th colspan="3" class="tcenter">बाकी</th>
                     </tr>
-
 
                     <tr>
-
                         <td colspan="2" class="tcenter" style="width:110px;">खरिद आदेश</td>
-                        <td rowspan="2" class="tcenter" style="min-width:180px;">सप्लायर्स </td>
-                        <td colspan="2" class="tcenter" style="width:110px;">स्टोर प्राप्ति</th>
+                        <td rowspan="2" class="tcenter" style="min-width:180px;">सप्लायर्स</td>
+                        <td colspan="2" class="tcenter" style="width:110px;">स्टोर प्राप्ति</td>
                         <td rowspan="2" class="tcenter" style="width:70px;">परिमाण</td>
-                        <td rowspan="2" class="tcenter" style="width:90px;">एकाई दर</td>
-
-
-                        <td rowspan="2" class="tcenter" style="width:90px;">रकम</td>
-                        <th colspan="2" class="tcenter" style="width:70px;">खर्च नोट </td>
-                        <td rowspan="2" class="tcenter" style="width:70px;">मालसामान पठाएको स्थान </td>
-                        <th rowspan="2" class="tcenter" style="width:70px;">परिमाण</td>
-                        <td rowspan="2" class="tcenter" style="width:90px;">रकम</td>
-                        <td rowspan="2" class="tcenter" style="width:90px;">मौज्दात परिमाण </td>
+                        <td rowspan="2" class="tcenter" style="width:90px;">एकाई दर</td>
                         <td rowspan="2" class="tcenter" style="width:90px;">रकम</td>
 
+                        <th colspan="2" class="tcenter" style="width:110px;">खर्च नोट</th>
+                        <td rowspan="2" class="tcenter" style="width:140px;">मालसामान पठाएको स्थान</td>
+                        <th rowspan="2" class="tcenter" style="width:70px;">परिमाण</th>
+                        <td rowspan="2" class="tcenter" style="width:90px;">रकम</td>
+
+                        <td rowspan="2" class="tcenter" style="width:90px;">मौज्दात परिमाण</td>
+                        <td rowspan="2" class="tcenter" style="width:90px;">रकम</td>
                         <td rowspan="2" class="tcenter" style="width:150px;">कैफियत</td>
-
                     </tr>
+
                     <tr>
                         <td class="tcenter" style="width:70px;">क्रमांक</td>
                         <td class="tcenter" style="width:80px;">मिति</td>
                         <td class="tcenter" style="width:70px;">क्रमांक</td>
-                        <td class="tcenter" style="width:70px;">मिति</td>
+                        <td class="tcenter" style="width:80px;">मिति</td>
+
                         <td class="tcenter" style="width:70px;">क्रमांक</td>
-
-                        <td class="tcenter" style="width:70px;">मिति</td>
-
-
-
+                        <td class="tcenter" style="width:80px;">मिति</td>
                     </tr>
                 </thead>
 
                 <tbody>
-
-
                     @forelse($rows as $r)
                         <tr>
-                            <td class="tcenter">{{ $r['slip_sn'] }}</td>
-                            <td class="tcenter small"><br>{{ $r['slip_date'] }}</td>
-                            <td class="small text-center " style="width: 120px">{{ $r['supplier'] }} <br>( {{ $r['desc'] }})</td>
-                            <td class="tcenter small">{{ $r['purchase_sn'] }}</td>
-                            
-                            
-                            <td class="tcenter">{{ $r['purchase_date'] }}</td>
-                            <td class="tcenter">{{ $r['qty'] }}({{ $r['unit']}})</td>
-                            <td class="tright">{{ $r['rate'] }}</td>
-                            <td class="tright">{{ $r['amount'] }}</td>
-                            {{-- <td class="tcenter">{{ $r['ledger'] ?: '' }}</td> --}}
-                            {{-- <td class="small">{{ $r['remarks'] }}</td> --}}
+                            {{-- खरिद आदेश --}}
+                            <td class="tcenter">{{ $r['slip_sn'] ?? '—' }}</td>
+                            <td class="tcenter small"><br>{{ $r['slip_date'] ?? '—' }}</td>
+
+                            {{-- suppliers --}}
+                            <td class="small text-center" style="width: 120px">
+                                {{ $r['supplier'] ?? '—' }}
+                                <br>( {{ $r['desc'] ?? '' }} )
+                            </td>
+
+                            {{-- स्टोर प्राप्ति --}}
+                            <td class="tcenter small">{{ $r['purchase_sn'] ?? '—' }}</td>
+                            <td class="tcenter">{{ $r['purchase_date'] ?? '—' }}</td>
+
+                            {{-- आम्दानी --}}
+                            <td class="tcenter">{{ $r['qty'] ?? '0.000' }} ({{ $r['unit'] ?? '' }})</td>
+                            <td class="tright">{{ $r['rate'] ?? '0.00' }}</td>
+                            <td class="tright">{{ $r['amount'] ?? '0.00' }}</td>
+
+                            {{-- खर्च नोट --}}
+                            <td class="tcenter">{{ $r['expense_sn'] ?? '—' }}</td>
+                            <td class="tcenter small"><br>{{ $r['expense_date'] ?? '—' }}</td>
+
+                            {{-- पठाएको स्थान --}}
+                            <td class="tcenter">{{ $r['destination'] ?? '—' }}</td>
+
+                            {{-- खर्च --}}
+                            <td class="tcenter">{{ $r['out_qty'] ?? '0.000' }}</td>
+                            <td class="tright">{{ $r['out_amount'] ?? '0.00' }}</td>
+
+                            {{-- बाकी --}}
+                            <td class="tcenter">{{ $r['baki_qty'] ?? '0.000' }}</td>
+                            <td class="tright">{{ $r['baki_amount'] ?? '0.00' }}</td>
+
+                            {{-- कैफियत --}}
+                            <td class="small">{{ $r['remarks'] ?? '' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="tcenter py-4">हाल कुनै अभिलेख छैन</td>
+                            <td colspan="16" class="tcenter py-4">हाल कुनै अभिलेख छैन</td>
                         </tr>
                     @endforelse
 
                     @if (count($rows))
                         <tr>
                             <td colspan="7" class="tright font-bold">जम्मा</td>
-                            <td class="tright font-bold">{{ $meta['grand_total'] }}</td>
-                            <td colspan="2"></td>
+                            <td class="tright font-bold">{{ $meta['grand_total'] ?? '0.00' }}</td>
+                            <td colspan="8"></td>
                         </tr>
                     @endif
                 </tbody>
@@ -255,8 +207,9 @@
         </div>
 
         <footer class="mt-6">
-            <div class="small text-gray-700">टिप्पणी: यो फर्म उत्पाद श्रेणी (Product Category) अनुसार Store Entry बाट
-                स्वचालित रूपमा बनेको हो।</div>
+            <div class="small text-gray-700">
+                टिप्पणी: यो फर्म उत्पाद श्रेणी (Product Category) अनुसार Store Entry बाट स्वचालित रूपमा बनेको हो।
+            </div>
         </footer>
     </div>
 @endsection

@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/StoreOutItem.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -19,19 +17,27 @@ class StoreOutItem extends Model
         'item_sn',
         'unit',
         'qty',
+        'rate',
+        'total_price',
+        'remarks',
         'returned_at',
     ];
 
-    protected $dates = ['returned_at'];
-
-    public function entryItem()
-    {
-        return $this->belongsTo(StoreEntryItem::class, 'store_entry_item_id');
-    }
+    protected $casts = [
+        'returned_at' => 'datetime',
+        'qty' => 'decimal:3',
+        'rate' => 'decimal:2',
+        'total_price' => 'decimal:2',
+    ];
 
     public function storeOut()
     {
         return $this->belongsTo(StoreOut::class, 'store_out_id');
+    }
+
+    public function storeEntryItem()
+    {
+        return $this->belongsTo(StoreEntryItem::class, 'store_entry_item_id');
     }
 
     public function scopeActive(Builder $q): Builder
