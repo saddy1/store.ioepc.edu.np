@@ -165,7 +165,7 @@
         <br>
 
         <div class="grid grid-cols-2 sm:grid-cols-2 gap-y-1 text-sm mb-3">
-            <div>बिल नं.: <strong>{{ $meta['purchase_sn'] }}</strong></div>
+            <div>बिल नं.: <strong>{{ $meta['bill_no'] }}</strong></div>
             <div class="text-right">मिति: <strong>{{ $meta['purchase_date'] ?? '—' }}</strong></div>
 
 

@@ -1,7 +1,7 @@
 @extends('Backend.layouts.app')
 
 @section('content')
-    <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto px-4 py-8 bg-gray-100">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold">स्टोर प्राप्ति</h1>
             <a href="{{ route('slips.index') }}"
@@ -65,19 +65,19 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right">
-                            
 
-                            <a class="text-blue-600 hover:underline text-sm"
-   href="{{ route('purchases.show', $o->purchase_sn) }}">View</a>
 
-@if(!$o->storeEntry)
-    <span class="mx-1 text-gray-300">|</span>
-    <a class="text-indigo-600 hover:underline text-sm"
-       href="{{ route('purchases.edit', $o) }}">Edit</a>
-@else
-    <span class="mx-1 text-gray-300">|</span>
-    <span class="text-gray-400 text-sm italic">Locked (Store done)</span>
-@endif
+                                <a class="text-blue-600 hover:underline text-sm"
+                                    href="{{ route('purchases.show', $o->purchase_sn) }}">View/Download</a>
+
+                                @if (!$o->storeEntry)
+                                    <span class="mx-1 text-gray-300">|</span>
+                                    <a class="text-indigo-600 hover:underline text-sm"
+                                        href="{{ route('purchases.edit', $o) }}">Edit</a>
+                                @else
+                                    <span class="mx-1 text-gray-300">|</span>
+                                    <span class="text-gray-400 text-sm italic">Locked (Store done)</span>
+                                @endif
 
                             </td>
                         </tr>

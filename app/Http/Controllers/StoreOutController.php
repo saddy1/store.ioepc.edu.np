@@ -78,7 +78,7 @@ class StoreOutController extends Controller
         }
 
         $outs = $q->paginate(15)->appends($request->only('search'));
-        return view('backend.store_out.index', compact('outs'));
+        return view('Backend.store_out.index', compact('outs'));
     }
 
     public function create(Request $request)
@@ -90,7 +90,7 @@ class StoreOutController extends Controller
             $prefillItem = StoreEntryItem::with(['itemCategory'])->find($itemId);
         }
 
-        return view('backend.store_out.create', compact('prefillItem'));
+        return view('Backend.store_out.create', compact('prefillItem'));
     }
 
     public function store(Request $request)
@@ -206,13 +206,13 @@ class StoreOutController extends Controller
     public function show(StoreOut $storeOut)
     {
         $storeOut->load(['employee', 'department', 'items.storeEntryItem.itemCategory']);
-        return view('backend.store_out.show', compact('storeOut'));
+        return view('Backend.store_out.show', compact('storeOut'));
     }
 
     public function print(StoreOut $storeOut)
     {
         $storeOut->load(['employee', 'department', 'items.storeEntryItem.itemCategory']);
-        return view('backend.store_out.print', compact('storeOut'));
+        return view('Backend.store_out.print', compact('storeOut'));
     }
 
     /**

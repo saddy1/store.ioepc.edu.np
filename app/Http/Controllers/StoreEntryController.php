@@ -30,7 +30,7 @@ class StoreEntryController extends Controller
         }
 
         $entries = $q->paginate(15)->appends($request->only('search'));
-        return view('backend.store.index', compact('entries'));
+        return view('Backend.store.index', compact('entries'));
     }
 
     /** Step 1: Let user pick Item Category / Product Category / Brand per line */
@@ -62,7 +62,7 @@ class StoreEntryController extends Controller
             ];
         });
 
-        return view('backend.store.prepare', compact(
+        return view('Backend.store.prepare', compact(
             'purchase',
             'rows',
             'itemCategories',
@@ -202,7 +202,7 @@ class StoreEntryController extends Controller
             ];
         });
 
-        return view('backend.store.show', compact('storeEntry', 'meta', 'rows'));
+        return view('Backend.store.show', compact('storeEntry', 'meta', 'rows'));
     }
 
 
@@ -361,7 +361,7 @@ $meta = [
 ];
 
 
-    return view('backend.store.ledger_category', compact('rows', 'meta'));
+    return view('Backend.store.ledger_category', compact('rows', 'meta'));
 }
 
     public function ledger(Request $request)
@@ -400,7 +400,7 @@ $meta = [
             ];
         });
 
-        return view('backend.store.categories', [
+        return view('Backend.store.categories', [
             'rows' => $rows,
             'filters' => [
                 'from' => $from ? $from->format('Y-m-d') : null,
@@ -448,7 +448,7 @@ $meta = [
 
     //     $categoryName = \App\Models\Category::find($categoryId)?->name ?? "Category #{$categoryId}";
 
-    //     return view('backend.store.category_items', [
+    //     return view('Backend.store.category_items', [
     //         'categoryId'   => $categoryId,
     //         'categoryName' => $categoryName,
     //         'items'        => $items,
@@ -462,7 +462,7 @@ $meta = [
 
     public function browseRoot()
     {
-        return view('backend.store.browse_root');
+        return view('Backend.store.browse_root');
     }
 
     /** List only Item Categories that have Store Entry Items */
@@ -484,7 +484,7 @@ $meta = [
                 ];
             });
 
-        return view('backend.store.browse_item_categories', compact('ics'));
+        return view('Backend.store.browse_item_categories', compact('ics'));
     }
 
     /** From a chosen Item Category, show only Product Categories that exist under it */
@@ -510,7 +510,7 @@ $meta = [
                 ];
             });
 
-        return view('backend.store.browse_ic_categories', [
+        return view('Backend.store.browse_ic_categories', [
             'itemCategoryId'   => $itemCategoryId,
             'itemCategoryName' => $ic?->name_en ?? ("Item Category #" . $itemCategoryId),
             'rows'             => $rows,
@@ -564,7 +564,7 @@ $meta = [
         $categoryName = Category::find($categoryId)?->name ?? "Category #{$categoryId}";
         $icName = $icId ? (ItemCategory::find($icId)?->name_en ?? "Item Category #{$icId}") : null;
 
-        return view('backend.store.category_items', [
+        return view('Backend.store.category_items', [
             'categoryId'   => $categoryId,
             'categoryName' => $categoryName,
             'items'        => $items,

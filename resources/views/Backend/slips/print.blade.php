@@ -102,18 +102,44 @@
             left: 0;
             right: 0;
         }
+        
     }
+    .printbar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .printbar a,
+            .printbar button {
+                padding: 8px 16px;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                background: white;
+                font-size: 14px;
+            }
+
+            .printbar a:hover,
+            .printbar button:hover {
+                background: #f3f4f6;
+            }
 </style>
 
 <!-- Print button (screen only) -->
 <div class="printbar">
+     <div class="text-sm text-gray-600">
+            <a href="{{ route('slips.index') }}">← Back</a>
+        </div>
     <button onclick="window.print()">🖨️ Print / Save as PDF</button>
 </div>
+
 
 <!-- Printable content -->
 <div class="a4" id="printable">
     <!-- Top-right code -->
-    <div class="text-center text-xs text-gray-700 mb-2">त्रि. वि फा. नं. १७</div>
+    <div class="text-right text-xs text-gray-700 mb-2">त्रि. वि फा. नं. १७</div>
 
     <!-- Header -->
     <div class="text-center leading-tight mb-6">

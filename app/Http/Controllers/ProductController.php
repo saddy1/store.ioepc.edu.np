@@ -19,12 +19,12 @@ class ProductController extends Controller
         }
 
         $products = $q->latest()->paginate(10)->appends($request->only('search'));
-        return view('backend.products.index', compact('products'));
+        return view('Backend.products.index', compact('products'));
     }
 
     public function create()
     {
-        return view('backend.products.create', [
+        return view('Backend.products.create', [
             'itemCategories' => ItemCategory::orderBy('name_en')->get(),
             'productCategories' => Category::orderBy('name')->get(),
             'brands' => Brand::orderBy('name')->get(),
@@ -57,7 +57,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        return view('backend.products.edit', [
+        return view('Backend.products.edit', [
             'product' => $product,
             'itemCategories' => ItemCategory::orderBy('name_en')->get(),
             'productCategories' => Category::orderBy('name')->get(),

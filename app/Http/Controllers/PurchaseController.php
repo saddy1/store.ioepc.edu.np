@@ -39,7 +39,7 @@ class PurchaseController extends Controller
 
         $orders = $q->paginate(10)->appends($request->only('search'));
 
-        return view('backend.purchases.index', compact('orders'));
+        return view('Backend.purchases.index', compact('orders'));
     }
 
   public function show(Purchase $purchase)
@@ -68,6 +68,7 @@ class PurchaseController extends Controller
 
     // Header/meta for the print header
     $meta = [
+        'bill_no'       => $purchase->bill_no,
         'purchase_sn'   => $purchase->purchase_sn,
         'purchase_date' => $purchase->purchase_date,
         'supplier'      => $purchase->supplier->name ?? '—',
@@ -86,7 +87,7 @@ class PurchaseController extends Controller
         'remarks'       => $purchase->remarks ?? '—',
     ];
 
-    return view('backend.purchases.show_print', compact('purchase','items','meta'));
+    return view('Backend.purchases.show_print', compact('purchase','items','meta'));
 }
 
 
@@ -94,7 +95,7 @@ class PurchaseController extends Controller
     {
         $slip = PurchaseSlip::with('items')->findOrFail($request->get('slip_id')); // must select a slip
 
-        return view('backend.purchases.create', [
+        return view('Backend.purchases.create', [
             'slip'       => $slip,
             'suppliers'  => Supplier::orderBy('name')->get(),
             'departments'=> Department::orderBy('name')->get(),
@@ -196,7 +197,7 @@ public function store(Request $request)
             ->with('error', 'This purchase is already posted to store and cannot be edited.');
     }
         $purchase->load(['items.product','supplier','department','slip.items']);
-        return view('backend.purchases.edit', [
+        return view('Backend.purchases.edit', [
             'purchase'   => $purchase,
             'suppliers'  => Supplier::orderBy('name')->get(),
             'departments'=> Department::orderBy('name')->get(),

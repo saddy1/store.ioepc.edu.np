@@ -95,7 +95,7 @@
                     </svg>
                     Edit
                   </a>
-                  <form action="{{ route('product_categories.destroy', $row) }}" method="POST"
+                  {{-- <form action="{{ route('product_categories.destroy', $row) }}" method="POST"
                         onsubmit="return confirm('Delete this category?')" class="inline">
                     @csrf @method('DELETE')
                     <button
@@ -105,7 +105,7 @@
                       </svg>
                       Delete
                     </button>
-                  </form>
+                  </form> --}}
                 </div>
               </td>
             </tr>

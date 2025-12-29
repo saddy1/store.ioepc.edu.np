@@ -97,12 +97,12 @@ class PurchaseSlipController extends Controller
         }
 
         $slips = $q->paginate(10)->appends($request->only('search'));
-        return view('backend.slips.index', compact('slips'));
+        return view('Backend.slips.index', compact('slips'));
     }
 
     public function create()
     {
-        return view('backend.slips.create', [
+        return view('Backend.slips.create', [
             'departments'   => Department::orderBy('name')->get(),
             'item_category' => ItemCategory::orderBy('name_en')->get(),
         ]);
@@ -176,7 +176,7 @@ class PurchaseSlipController extends Controller
         
             ->pluck('qty');
 
-        return view('backend.slips.show', [
+        return view('Backend.slips.show', [
             'slip' => $slip,
             'purchasedByProduct' => $purchasedByProduct,
         ]);
@@ -199,7 +199,7 @@ class PurchaseSlipController extends Controller
             ];
         })->toArray();
 
-        return view('backend.slips.edit', [
+        return view('Backend.slips.edit', [
             'slip'           => $slip,
             'slipItemsForJs' => $slipItemsForJs,
             'departments'    => Department::orderBy('name')->get(),
@@ -318,7 +318,7 @@ class PurchaseSlipController extends Controller
             ];
         });
 
-        return view('backend.slips.print', [
+        return view('Backend.slips.print', [
             'slip'  => $slip,
             'items' => $items,
         ]);

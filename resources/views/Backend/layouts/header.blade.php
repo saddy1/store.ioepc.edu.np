@@ -10,65 +10,73 @@
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="{{asset('bs-datepicker.js')}}" ></script>
     @vite('resources/css/app.css')
-
+    <style>
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            transform: translateX(4px);
+        }
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
 </head>
 
-<body class="antialiased bg-gray-50 text-gray-900">
+<body class="antialiased bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
 
     <!-- HEADER (fixed to screen sides) -->
-    <header class="fixed inset-x-0 top-0 h-16 bg-white shadow-lg z-50">
+    <header class="fixed inset-x-0 top-0 h-16 bg-white shadow-xl z-50 border-b-2 border-indigo-100">
         <div class="h-full px-4 md:px-6 flex items-center justify-between">
-            <a href="{{ url('/') }}" class="flex items-center gap-2">
-                <img src="{{ asset('asset/assets/ioe_logo.png') }}" class="h-10 w-auto" alt="Logo">
-                <span class="text-lg md:text-xl font-bold text-blue-900"> STORE IOEPC</span>
+            <a href="{{ url('/') }}" class="flex items-center gap-3 group">
+                <img src="{{ asset('asset/assets/ioe_logo.png') }}" class="h-10 w-auto transition-transform group-hover:scale-110" alt="Logo">
+                <span class="text-lg md:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">STORE IOEPC</span>
             </a>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
                 @if (session('admin_id'))
                     <!-- Mobile sidebar toggle -->
                     <button id="sidebarToggle"
-                        class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100"
+                        class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl hover:bg-indigo-50 transition-colors"
                         title="Menu">
-                        <i class="fa-solid fa-bars text-lg"></i>
+                        <i class="fa-solid fa-bars text-lg text-indigo-600"></i>
                     </button>
 
-                    <!-- Notifications (optional) -->
-                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hidden sm:inline-flex">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all hidden sm:inline-flex">
                         <i class="fas fa-bell text-lg"></i>
-                        <span
-                            class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                        <span class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-semibold animate-pulse">3</span>
                     </button>
 
                     <!-- Profile -->
                     <div class="relative">
                         <button id="profileDropdownBtn"
-                            class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100">
-                            <div
-                                class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
+                            class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-indigo-50 transition-all">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-semibold shadow-lg">
                                 {{ strtoupper(mb_substr($admin->name, 0, 1)) }}
                             </div>
-                            <span class="hidden md:inline-block font-medium">{{ $admin->name }}</span>
-                            <i class="fa-solid fa-chevron-down text-sm text-gray-500"></i>
+                            <span class="hidden md:inline-block font-medium text-gray-700">{{ $admin->name }}</span>
+                            <i class="fa-solid fa-chevron-down text-sm text-gray-400"></i>
                         </button>
 
                         <div id="profileDropdownMenu"
-                            class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-50">
-                            <div class="px-4 py-2 text-sm text-gray-600 border-b">
-                                Admin
+                            class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                            <div class="px-4 py-3 text-sm text-gray-600 border-b bg-gradient-to-r from-indigo-50 to-purple-50">
+                                <p class="font-semibold text-gray-800">Admin</p>
                             </div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    Logout
+                                    class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
                                 </button>
                             </form>
                         </div>
                     </div>
                 @else
                     <a href="{{ route('student.login.form') }}"
-                        class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition">
-                        Login
+                        class="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-medium">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
                     </a>
                 @endif
             </div>
@@ -77,86 +85,97 @@
 
     @if (session('admin_id'))
         <!-- SIDEBAR BACKDROP (mobile) -->
-        <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/30 z-40 lg:hidden"></div>
+        <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"></div>
 
-        <!-- SIDEBAR (fixed, aligned to screen sides; never under header) -->
+        <!-- SIDEBAR -->
         <aside id="sidebar"
-            class="fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-gray-900 text-white z-50
+            class="fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-gradient-to-b from-gray-900 via-indigo-900 to-purple-900 text-white z-50
                   transform -translate-x-full transition-transform duration-300
-                  overflow-y-auto lg:translate-x-0">
-            <nav class="py-4">
-                <ul class="space-y-1 px-3 text-sm">
+                  overflow-y-auto lg:translate-x-0 shadow-2xl">
+            <nav class="py-6">
+                <ul class="space-y-2 px-3 text-sm">
                     <li>
                         <a href="{{ route('admin.dashboard') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-tachometer-alt w-5 text-gray-300"></i>
-                            <span>Dashboard</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-chart-line w-5 text-blue-300 group-hover:text-blue-200"></i>
+                            <span class="font-medium">Dashboard (ड्यासबोर्ड)</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('suppliers.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-bank w-5 text-gray-300"></i><span>Suppliers</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-truck-loading w-5 text-green-300 group-hover:text-green-200"></i>
+                            <span class="font-medium">Suppliers (आपूर्तिकर्ताहरू)</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('categories.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-list-alt text-gray-300" aria-hidden="true" ></i><span>Items Category</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-th-large w-5 text-yellow-300 group-hover:text-yellow-200"></i>
+                            <span class="font-medium">Items Category (सामानको विधा)</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('product_categories.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-file-invoice w-5 text-gray-300"></i><span>Product Category</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-layer-group w-5 text-orange-300 group-hover:text-orange-200"></i>
+                            <span class="font-medium">Product Category (उत्पादन विधा)</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('brands.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-file w-5 text-gray-300"></i><span>Brand</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-tag w-5 text-pink-300 group-hover:text-pink-200"></i>
+                            <span class="font-medium">Brand (ब्रान्ड)</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('department.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-building  w-5 text-gray-300"></i><span>Departments</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-building w-5 text-cyan-300 group-hover:text-cyan-200"></i>
+                            <span class="font-medium">Departments (शाखाहरू)</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('store.ledger') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                           <i class="fas fa-drum-steelpan"></i><span>Product</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-box-open w-5 text-purple-300 group-hover:text-purple-200"></i>
+                            <span class="font-medium">Product (उत्पादन)</span>
                         </a>
                     </li>
-
-                         <li>
+                    <li>
                         <a href="{{ route('slips.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class=" fas fa-book text-gray-300"></i><span>माग फारम</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-clipboard-list w-5 text-indigo-300 group-hover:text-indigo-200"></i>
+                            <span class="font-medium">Requisition Form (माग फारम)</span>
                         </a>
                     </li>
-                     <li>
+                    <li>
                         <a href="{{ route('purchases.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-file w-5 text-gray-300"></i><span>स्टोर प्राप्ति</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-receipt w-5 text-teal-300 group-hover:text-teal-200"></i>
+                            <span class="font-medium">Store Receipt (स्टोर प्राप्ति)</span>
                         </a>
                     </li>
-                     <li>
+                    <li>
                         <a href="{{ route('store.out.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fa fa-file w-5 text-gray-300"></i><span>स्टोर kharcha</span>
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-sign-out-alt w-5 text-red-300 group-hover:text-red-200"></i>
+                            <span class="font-medium">Store Issue / Expense (स्टोर खर्च)</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('employees.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-cog w-5 text-gray-300"></i><span>Staff</span>
+                        <a href="{{ route('employees.index') }}" 
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-users w-5 text-lime-300 group-hover:text-lime-200"></i>
+                            <span class="font-medium">Staff (कर्मचारी)</span>
                         </a>
                     </li>
-
                     <li>
-                        <a href="#settings" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800">
-                            <i class="fas fa-cog w-5 text-gray-300"></i><span>Settings</span>
+                        <a href="#settings" 
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-cog w-5 text-gray-300 group-hover:text-gray-200"></i>
+                            <span class="font-medium">Settings</span>
                         </a>
                     </li>
                 </ul>
@@ -164,19 +183,8 @@
         </aside>
     @endif
 
-    <!-- MAIN (never sits under header; only shifts when sidebar is present) -->
-    <main class="pt-16 lg:ml-64 min-h-screen px-4 md:px-6">
-        {{-- @if (session('success'))
-            <div class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3">
-                {{ session('success') }}
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3">
-                {{ session('error') }}
-            </div>
-        @endif --}}
-
+    <!-- MAIN -->
+    <main class="pt-16 lg:ml-64 min-h-screen px-4 md:px-6 py-6">
         @yield('content')
     </main>
 

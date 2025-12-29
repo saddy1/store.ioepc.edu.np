@@ -27,7 +27,7 @@ class CategoryController extends Controller
 
     public function create()
     {
-        return view('backend.categories.create');
+        return view('Backend.categories.create');
     }
 
     public function store(Request $request)
@@ -49,7 +49,7 @@ public function edit(Category $product_category)
 
 {
   $category = $product_category;
-    return view('backend.categories.edit', compact('category'));
+    return view('Backend.categories.edit', compact('category'));
 }
 
 
