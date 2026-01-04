@@ -109,6 +109,13 @@
                         </a>
                     </li>
                     <li>
+                        <a href="{{ route('employees.index') }}" 
+                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
+                            <i class="fas fa-users w-5 text-lime-300 group-hover:text-lime-200"></i>
+                            <span class="font-medium">Staff (कर्मचारी)</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('categories.index') }}"
                             class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
                             <i class="fas fa-th-large w-5 text-yellow-300 group-hover:text-yellow-200"></i>
@@ -164,13 +171,7 @@
                             <span class="font-medium">Store Issue / Expense (स्टोर खर्च)</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('employees.index') }}" 
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-users w-5 text-lime-300 group-hover:text-lime-200"></i>
-                            <span class="font-medium">Staff (कर्मचारी)</span>
-                        </a>
-                    </li>
+                    
                     <li>
                         <a href="#settings" 
                             class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
