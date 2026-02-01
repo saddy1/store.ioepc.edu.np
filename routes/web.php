@@ -49,6 +49,10 @@ Route::middleware('admin.auth')->group(function () {
     Route::resource('product_categories', CategoryController::class);
 
     // Purchase
+Route::get('/slips/lookup', [PurchaseSlipController::class, 'lookupByPoSn'])
+    ->name('order_slips.lookup');
+
+
     Route::get('/slips/{slip}/print', [PurchaseSlipController::class, 'print'])->name('slips.print');
     Route::get('/products/search', [PurchaseSlipController::class, 'productSearch'])->name('products.search');
 

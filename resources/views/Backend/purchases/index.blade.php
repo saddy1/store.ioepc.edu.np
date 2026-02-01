@@ -2,13 +2,23 @@
 
 @section('content')
     <div class="max-w-6xl mx-auto px-4 py-8 bg-gray-100">
+        
         <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-2xl font-bold">स्टोर प्राप्ति</h1>
-            <a href="{{ route('slips.index') }}"
-                class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                ← खरिद माग फाराम
-            </a>
-        </div>
+    <h1 class="text-2xl font-bold">स्टोर प्राप्ति</h1>
+
+    <div class="flex gap-2">
+        <a href="{{ route('purchases.create') }}"
+           class="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">
+            + स्टोर प्राप्ति 
+        </a>
+
+        <a href="{{ route('slips.index') }}"
+           class="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+            ← खरिद माग फाराम
+        </a>
+    </div>
+</div>
+
 
         <form method="GET" action="{{ route('purchases.index') }}" class="mb-6">
             <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -43,12 +53,25 @@
                                 <div class="text-xs text-gray-500">{{ optional($o->purchase_date)->format('Y-m-d') }}</div>
                             </td>
                             <td class="px-4 py-3">{{ $o->supplier->name ?? '—' }}</td>
-                            <td class="px-4 py-3">
-                                <a class="text-blue-600 hover:underline text-sm"
-                                    href="{{ route('slips.print', $o->slip->po_sn) }}">
-                                    खरिद माग फाराम #{{ $o->slip->po_sn ?? $o->purchase_slip_id }}
-                                </a>
-                            </td>
+                           <td class="px-4 py-3">
+    @php
+        $slips = $o->slipNumbers(); // from model accessor
+    @endphp
+
+    @if(count($slips))
+        <div class="space-y-1">
+            @foreach($slips as $sn)
+                <a class="text-blue-600 hover:underline text-sm block"
+                   href="{{ route('slips.print', $sn) }}">
+                    खरिद माग फाराम #{{ $sn }}
+                </a>
+            @endforeach
+        </div>
+    @else
+        <span class="text-gray-500 text-sm italic">Tender/Quotation (No Slip)</span>
+    @endif
+</td>
+
                             <td class="px-4 py-3">{{ number_format($o->grand_total ?: $o->total_amount, 2) }}</td>
 
                             <td class="px-4 py-3">

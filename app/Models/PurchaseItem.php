@@ -9,27 +9,32 @@ class PurchaseItem extends Model
 {
     protected $table = 'purchase_items';
 
-    protected $fillable = [
-        'purchase_id',
-        'item_category_id',
-        'product_id',
-        'temp_name',
-        'temp_sn',
-        'unit',
-        'qty',
-        'rate',
-         'store_entry_sn',
-        'store_entry_date',
-        'discount_percent',
-        'discount_amount',
-        'line_subtotal',
-        'notes',
-    ];
+protected $fillable = [
+    'purchase_id',
+
+    // ✅ add these
+    'purchase_slip_id',
+    'purchase_slip_item_id',
+
+    'item_category_id',
+    'product_id',
+    'temp_name',
+    'temp_sn',
+    'unit',
+    'qty',
+    'rate',
+    'store_entry_sn',
+    'store_entry_date',
+    'discount_percent',
+    'discount_amount',
+    'line_subtotal',
+    'notes',
+];
 
     protected $casts = [
         'qty'               => 'decimal:3',
         'rate'              => 'decimal:2',
-        
+
         'discount_percent'  => 'decimal:2',
         'discount_amount'   => 'decimal:2',
         'line_subtotal'     => 'decimal:2',
@@ -50,6 +55,12 @@ class PurchaseItem extends Model
         // nullable
         return $this->belongsTo(Product::class);
     }
+
+    public function slipItem()
+{
+  return $this->belongsTo(PurchaseSlipItem::class, 'purchase_slip_item_id');
+}
+
 
     protected static function booted(): void
     {

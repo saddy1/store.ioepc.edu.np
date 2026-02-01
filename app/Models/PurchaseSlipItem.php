@@ -42,4 +42,9 @@ class PurchaseSlipItem extends Model
     {
         return $this->belongsTo(ItemCategory::class, 'item_category_id');
     }
+    public function purchaseItem()
+{
+  return $this->hasOne(PurchaseItem::class, 'purchase_slip_item_id');
+}
+
 }

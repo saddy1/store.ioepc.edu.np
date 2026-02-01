@@ -8,6 +8,8 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script src="{{asset('bs-datepicker.js')}}" ></script>
     @vite('resources/css/app.css')
     <style>
@@ -83,106 +85,113 @@
         </div>
     </header>
 
-    @if (session('admin_id'))
-        <!-- SIDEBAR BACKDROP (mobile) -->
-        <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"></div>
+ @if (session('admin_id'))
 
-        <!-- SIDEBAR -->
-        <aside id="sidebar"
-            class="fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-gradient-to-b from-gray-900 via-indigo-900 to-purple-900 text-white z-50
-                  transform -translate-x-full transition-transform duration-300
-                  overflow-y-auto lg:translate-x-0 shadow-2xl">
-            <nav class="py-6">
-                <ul class="space-y-2 px-3 text-sm">
-                    <li>
-                        <a href="{{ route('admin.dashboard') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-chart-line w-5 text-blue-300 group-hover:text-blue-200"></i>
-                            <span class="font-medium">Dashboard (ड्यासबोर्ड)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('suppliers.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-truck-loading w-5 text-green-300 group-hover:text-green-200"></i>
-                            <span class="font-medium">Suppliers (आपूर्तिकर्ताहरू)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('employees.index') }}" 
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-users w-5 text-lime-300 group-hover:text-lime-200"></i>
-                            <span class="font-medium">Staff (कर्मचारी)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('categories.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-th-large w-5 text-yellow-300 group-hover:text-yellow-200"></i>
-                            <span class="font-medium">Items Category (सामानको विधा)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('product_categories.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-layer-group w-5 text-orange-300 group-hover:text-orange-200"></i>
-                            <span class="font-medium">Product Category (उत्पादन विधा)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('brands.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-tag w-5 text-pink-300 group-hover:text-pink-200"></i>
-                            <span class="font-medium">Brand (ब्रान्ड)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('department.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-building w-5 text-cyan-300 group-hover:text-cyan-200"></i>
-                            <span class="font-medium">Departments (शाखाहरू)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('store.ledger') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-box-open w-5 text-purple-300 group-hover:text-purple-200"></i>
-                            <span class="font-medium">Product (उत्पादन)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('slips.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-clipboard-list w-5 text-indigo-300 group-hover:text-indigo-200"></i>
-                            <span class="font-medium">Requisition Form (माग फारम)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('purchases.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-receipt w-5 text-teal-300 group-hover:text-teal-200"></i>
-                            <span class="font-medium">Store Receipt (स्टोर प्राप्ति)</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('store.out.index') }}"
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-sign-out-alt w-5 text-red-300 group-hover:text-red-200"></i>
-                            <span class="font-medium">Store Issue / Expense (स्टोर खर्च)</span>
-                        </a>
-                    </li>
-                    
-                    <li>
-                        <a href="#settings" 
-                            class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 group">
-                            <i class="fas fa-cog w-5 text-gray-300 group-hover:text-gray-200"></i>
-                            <span class="font-medium">Settings</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
-    @endif
+<div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/60 z-40 lg:hidden"></div>
+
+<aside id="sidebar"
+class="fixed left-0 top-16 w-60 h-[calc(100vh-4rem)] 
+bg-slate-950 text-white z-50
+transform -translate-x-full transition-transform duration-300
+overflow-y-auto lg:translate-x-0 border-r border-slate-800">
+
+    <nav class="py-2">
+        <ul class="space-y-1 px-2 text-sm">
+
+            <li>
+                <a href="{{ route('admin.dashboard') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-chart-line w-5 text-slate-300"></i>
+                    <span>ड्यासबोर्ड(Dashboard)</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('suppliers.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-truck w-5 text-slate-300"></i>
+                    <span>आपूर्तिकर्ता (Suppliers)</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('employees.index') }}" 
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-users w-5 text-slate-300"></i>
+                    <span>कर्मचारी (Staff)</span>
+                </a>
+            </li>
+{{-- 
+            <li>
+                <a href="{{ route('categories.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-th-large w-5 text-slate-300"></i>
+                    <span>सामान विधा (Item Categories)</span>
+                </a>
+            </li> --}}
+
+            <li>
+                <a href="{{ route('product_categories.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-layer-group w-5 text-slate-300"></i>
+                    <span>सामग्री प्रकार (Type)</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('brands.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-tag w-5 text-slate-300"></i>
+                    <span>ब्रान्ड (Brand)</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('department.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-building w-5 text-slate-300"></i>
+                    <span>शाखा (Department)</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('store.ledger') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-box w-5 text-slate-300"></i>
+                    <span>सामाग्री (Products)</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('slips.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-clipboard-list w-5 text-slate-300"></i>
+                    <span>माग फारम</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('purchases.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-receipt w-5 text-slate-300"></i>
+                    <span>स्टोर प्राप्ति</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('store.out.index') }}"
+                class="nav-item flex items-center gap-3 px-3 py-2 rounded-md">
+                    <i class="fas fa-sign-out-alt w-5 text-slate-300"></i>
+                    <span>स्टोर खर्च</span>
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+
+@endif
+
 
     <!-- MAIN -->
     <main class="pt-16 lg:ml-64 min-h-screen px-4 md:px-6 py-6">

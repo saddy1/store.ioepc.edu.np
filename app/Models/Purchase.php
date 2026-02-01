@@ -103,4 +103,20 @@ public function getRouteKeyName()
 {
     return $this->hasOne(\App\Models\StoreEntry::class);
 }
+
+
+public function slipNumbers(): array
+{
+    // purchase_items.purchase_slip_item_id -> purchase_slip_items.purchase_slip_id -> purchase_slips.po_sn
+    return $this->items()
+        ->whereNotNull('purchase_slip_item_id')
+        ->with(['slipItem.slip:id,po_sn'])
+        ->get()
+        ->pluck('slipItem.slip.po_sn')
+        ->filter()
+        ->unique()
+        ->values()
+        ->toArray();
+}
+
 }

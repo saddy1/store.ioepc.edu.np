@@ -13,7 +13,7 @@ use App\Models\{
     PurchaseSlipItem,
     Department,
     PurchaseLine,
-    ItemCategory
+    ItemCategory,PurchaseItem
 };
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +78,53 @@ class PurchaseSlipController extends Controller
         );
     }
 
+
+
+  public function lookupByPoSn(Request $request)
+{
+    $poSn = trim((string)$request->get('po_sn'));
+
+    if ($poSn === '') {
+        return response()->json(['ok' => false, 'msg' => 'Order Slip No is required']);
+    }
+
+    $slip = PurchaseSlip::query()
+        ->whereRaw('TRIM(po_sn) = ?', [$poSn])
+        ->with(['items' => fn($q) => $q->orderBy('id')])
+        ->first();
+
+    if (!$slip) {
+        return response()->json(['ok' => false, 'msg' => 'Order Slip not found']);
+    }
+
+    $purchasedIds = PurchaseItem::whereIn('purchase_slip_item_id', $slip->items->pluck('id'))
+        ->pluck('purchase_slip_item_id')
+        ->flip();
+
+    $items = $slip->items->map(function ($it) use ($purchasedIds) {
+        $already = isset($purchasedIds[$it->id]);
+        return [
+            'id' => $it->id,
+            'name' => $it->temp_name ?: ('Item #'.$it->id),
+            'sn' => $it->temp_sn,
+            'unit' => $it->unit,
+            'ordered_qty' => (float)$it->ordered_qty,
+            'max_rate' => (float)$it->max_rate,
+            'is_purchased' => $already,
+        ];
+    });
+
+    return response()->json([
+        'ok' => true,
+        'slip' => [
+            'id' => $slip->id,
+            'po_sn' => $slip->po_sn,
+            'po_date' => optional($slip->po_date)->format('Y-m-d'),
+            'department_id' => $slip->department_id,
+            'items' => $items,
+        ],
+    ]);
+}
     public function index(Request $request)
     {
         $q = PurchaseSlip::query()

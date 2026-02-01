@@ -115,6 +115,17 @@ class StoreEntryController extends Controller
                 $qty  = (float)$line->qty;
                 $rate = (float)$line->rate;
 
+                $rateExVat = $rate;
+                if (($purchase->tax_mode ?? 'PAN') === 'VAT') {
+                    $vp = (float)($purchase->vat_percent ?? 0);
+                    if ($vp > 0) {
+                        $rateExVat = $rate * (1 + ($vp / 100));
+                    }
+                }
+
+                $rateExVat = round($rateExVat, 4);
+
+
                 // Selected categories/brand
                 $itemCategoryId = $choice['item_category_id']
                     ?? $line->item_category_id
@@ -137,8 +148,8 @@ class StoreEntryController extends Controller
                     'item_sn'          => $sn,
                     'unit'             => $unit,
                     'qty'              => $qty,
-                    'rate'             => $rate,
-                    'total_price'      => round($qty * $rate, 2),
+                    'rate' => $rateExVat,
+                    'total_price' => round($qty * $rateExVat, 2),
                 ]);
 
                 // 4️⃣ Update purchase_items table
@@ -207,162 +218,167 @@ class StoreEntryController extends Controller
 
 
 
-public function ledgerByCategory(Request $request, int $categoryId)
-{
-    $from = $request->query('from');
-    $to   = $request->query('to');
+    public function ledgerByCategory(Request $request, int $categoryId)
+    {
+        $from = $request->query('from');
+        $to   = $request->query('to');
 
-    $category = Category::findOrFail($categoryId);
+        $category = Category::findOrFail($categoryId);
 
-    // ✅ Load everything view needs (safe + complete)
-    $items = StoreEntryItem::query()
-        ->where('category_id', $categoryId)
-        ->with([
-            'entry.purchase.slip',
-            'entry.purchase.supplier',
-            'product',
-            'storeOutItems.storeOut.department',
-            // if employee relation exists it will load; if not, it won't be used (we use safe fallback)
-            'storeOutItems.storeOut.employee',
-        ])
-        ->when($from, function ($q) use ($from) {
-            $q->whereHas('entry.purchase', fn ($p) => $p->whereDate('purchase_date', '>=', $from));
-        })
-        ->when($to, function ($q) use ($to) {
-            $q->whereHas('entry.purchase', fn ($p) => $p->whereDate('purchase_date', '<=', $to));
-        })
-        ->orderBy('id')
-        ->get();
+        // ✅ Load everything view needs (safe + complete)
+        $items = StoreEntryItem::query()
+            ->where('category_id', $categoryId)
+            ->with([
+                'entry.purchase.slip',
+                'entry.purchase.supplier',
+                'product',
+                'storeOutItems.storeOut.department',
+                // if employee relation exists it will load; if not, it won't be used (we use safe fallback)
+                'storeOutItems.storeOut.employee',
+            ])
+            ->when($from, function ($q) use ($from) {
+                $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '>=', $from));
+            })
+            ->when($to, function ($q) use ($to) {
+                $q->whereHas('entry.purchase', fn($p) => $p->whereDate('purchase_date', '<=', $to));
+            })
+            ->orderBy('id')
+            ->get();
 
-// Totals
-$grandInQty     = 0.0;
-$grandInAmount  = 0.0;
+        // Totals
+        $grandInQty     = 0.0;
+        $grandInAmount  = 0.0;
 
-// IMPORTANT: grandOut/grandBaki should reflect ONLY consumable movement
-$grandOutQty    = 0.0;
-$grandOutAmount = 0.0;
+        // IMPORTANT: grandOut/grandBaki should reflect ONLY consumable movement
+        $grandOutQty    = 0.0;
+        $grandOutAmount = 0.0;
 
-$rows = $items->map(function ($it) use (&$grandInQty, &$grandInAmount, &$grandOutQty, &$grandOutAmount) {
+        $rows = $items->map(function ($it) use (&$grandInQty, &$grandInAmount, &$grandOutQty, &$grandOutAmount) {
 
-    $purchase = $it->entry?->purchase;
-    $slip     = $purchase?->slip;
+            $purchase = $it->entry?->purchase;
+            $slip     = $purchase?->slip;
 
-    $inQty    = (float) ($it->qty ?? 0);
-    $rate     = (float) ($it->rate ?? 0);
-    $inAmount = (float) ($it->total_price ?? ($inQty * $rate));
+            $inQty    = (float) ($it->qty ?? 0);
+            $rate     = (float) ($it->rate ?? 0);
+            $inAmount = (float) ($it->total_price ?? ($inQty * $rate));
 
-    // ✅ category type detect (your type is 0/1 in DB)
-    $cat = $it->itemCategory;
-    $isConsumable    = $cat?->isConsumable() ?? true;
-    $isNonConsumable = $cat?->isNonConsumable() ?? false;
+            // ✅ category type detect (your type is 0/1 in DB)
+            $cat = $it->itemCategory;
+            $isConsumable    = $cat?->isConsumable() ?? true;
+            $isNonConsumable = $cat?->isNonConsumable() ?? false;
 
-    // ✅ only active out (exclude returned)
-    $outItems = $it->storeOutItems->whereNull('returned_at');
+            // ✅ only active out (exclude returned)
+            $outItems = $it->storeOutItems->whereNull('returned_at');
 
-    $outQty    = (float) $outItems->sum('qty');
-    $outAmount = $outQty * $rate;
+            $outQty    = (float) $outItems->sum('qty');
+            $outAmount = $outQty * $rate;
 
-    // ✅ ONLY consumable affects balance (BAKI + totals)
-    $effectiveOutQty    = $isConsumable ? $outQty : 0.0;
-    $effectiveOutAmount = $isConsumable ? $outAmount : 0.0;
+            // ✅ ONLY consumable affects balance (BAKI + totals)
+            $effectiveOutQty    = $isConsumable ? $outQty : 0.0;
+            $effectiveOutAmount = $isConsumable ? $outAmount : 0.0;
 
-    $bakiQty    = $inQty - $effectiveOutQty;
-    $bakiAmount = $inAmount - $effectiveOutAmount;
+            $bakiQty    = $inQty - $effectiveOutQty;
+            $bakiAmount = $inAmount - $effectiveOutAmount;
 
-    // ✅ pick latest StoreOut for expense note/date/department/employee/remarks
-    $latestOutItem = $outItems->sortByDesc('id')->first();
-    $so = $latestOutItem?->storeOut;
+            // ✅ pick latest StoreOut for expense note/date/department/employee/remarks
+            $latestOutItem = $outItems->sortByDesc('id')->first();
+            $so = $latestOutItem?->storeOut;
 
-    $expenseSn   = $so?->store_out_sn ?? $so?->out_sn ?? ($so ? ('OUT-' . $so->id) : '—');
-    $expenseDate = $so?->store_out_date_bs
-        ?? ($so?->out_date_bs ?? ($so?->out_date ? date('Y-m-d', strtotime($so->out_date)) : ($so?->created_at?->format('Y-m-d') ?? '—')));
+            $expenseSn   = $so?->store_out_sn ?? $so?->out_sn ?? ($so ? ('OUT-' . $so->id) : '—');
+            $expenseDate = $so?->store_out_date_bs
+                ?? ($so?->out_date_bs ?? ($so?->out_date ? date('Y-m-d', strtotime($so->out_date)) : ($so?->created_at?->format('Y-m-d') ?? '—')));
 
-    $destination = $so?->department?->name ?? '—';
+            $destination = $so?->department?->name ?? '—';
 
-    $employeeName = $so?->employee?->full_name
-        ?? $so?->employee?->name
-        ?? ($so?->employee_name ?? $so?->issued_by ?? '—');
+            $employeeName = $so?->employee?->full_name
+                ?? $so?->employee?->name
+                ?? ($so?->employee_name ?? $so?->issued_by ?? '—');
 
-    $employeeDept = $so?->employee?->department?->name ?? '';
+            $employeeDept = $so?->employee?->department?->name ?? '';
 
-    // ✅ remarks: show store-out remarks + issued-to
-    $remarkParts = [];
-    if (!empty($so?->remarks)) $remarkParts[] = $so->remarks;
-    if ($employeeName !== '—') {
-        $remarkParts[] = 'Issued To: ' . $employeeName . ($employeeDept ? " ($employeeDept)" : '');
+            // ✅ remarks: show store-out remarks + issued-to
+            $remarkParts = [];
+            if (!empty($so?->remarks)) $remarkParts[] = $so->remarks;
+            if ($employeeName !== '—') {
+                $remarkParts[] = 'Issued To: ' . $employeeName . ($employeeDept ? " ($employeeDept)" : '');
+            }
+            $finalRemarks = implode(' | ', $remarkParts);
+
+            // Accumulate totals
+            $grandInQty    += $inQty;
+            $grandInAmount += $inAmount;
+
+            // IMPORTANT: totals reflect ONLY consumable movement
+            $grandOutQty    += $effectiveOutQty;
+            $grandOutAmount += $effectiveOutAmount;
+
+
+
+            return [
+                // खरिद आदेश (PO Slip)
+
+                'slip_sn'   => ($it->purchaseItem?->slipItem?->slip)->po_sn ?? '',
+                'slip_date' => optional(
+                    $it->purchaseItem?->slipItem?->slip?->po_date
+                )->format('Y-m-d') ?? '—',
+
+                // suppliers + (product name)
+                'supplier'  => $purchase?->supplier?->name ?? ($it->entry?->supplier_name ?? '—'),
+                'desc'      => $it->product?->name ?? $it->item_name ?? '—',
+
+                // store receipt (purchase/store entry)
+                'purchase_sn'   => $purchase?->purchase_sn ?? ($it->entry?->purchase_sn ?? '—'),
+                'purchase_date' => $purchase?->purchase_date
+                    ? date('Y-m-d', strtotime($purchase->purchase_date))
+                    : ($it->entry?->purchase_date ?? '—'),
+
+                // IN
+                'qty'    => number_format($inQty, 3),
+                'unit'   => $it->unit ?? '',
+                'rate'   => number_format($rate, 2),
+                'amount' => number_format($inAmount, 2),
+
+                // ✅ KHARCHA (expense) - show actual issue (even for non-consumable)
+                'expense_sn'   => $expenseSn,
+                'expense_date' => $expenseDate,
+                'destination'  => $destination,
+                'out_qty'      => number_format($outQty, 3),
+                'out_amount'   => number_format($outAmount, 2),
+
+                // ✅ BAKI - only consumable reduces baki
+                'baki_qty'     => number_format($bakiQty, 3),
+                'baki_amount'  => number_format($bakiAmount, 2),
+
+                // ✅ remarks/cafiyat
+                'remarks' => $finalRemarks,
+            ];
+        })->values()->all();
+
+        $grandBakiQty    = $grandInQty - $grandOutQty;
+        $grandBakiAmount = $grandInAmount - $grandOutAmount;
+
+        $meta = [
+            'category_id'   => (int) $category->id,
+            'category_name' => $category->name ?? ('Category #' . $category->id),
+            'from'          => $from,
+            'to'            => $to,
+
+            'grand_in'      => number_format($grandInQty, 3),
+            'grand_out'     => number_format($grandOutQty, 3),      // ✅ only consumable
+            'grand_baki'    => number_format($grandBakiQty, 3),     // ✅ only consumable
+
+            // for your bottom "जम्मा" row (income amount total)
+            'grand_total'   => number_format($grandInAmount, 2),
+
+            // optional
+            'grand_in_amount'   => number_format($grandInAmount, 2),
+            'grand_out_amount'  => number_format($grandOutAmount, 2),    // ✅ only consumable
+            'grand_baki_amount' => number_format($grandBakiAmount, 2),   // ✅ only consumable
+        ];
+
+
+        return view('Backend.store.ledger_category', compact('rows', 'meta'));
     }
-    $finalRemarks = implode(' | ', $remarkParts);
-
-    // Accumulate totals
-    $grandInQty    += $inQty;
-    $grandInAmount += $inAmount;
-
-    // IMPORTANT: totals reflect ONLY consumable movement
-    $grandOutQty    += $effectiveOutQty;
-    $grandOutAmount += $effectiveOutAmount;
-
-    return [
-        // खरिद आदेश (PO Slip)
-        'slip_sn'   => $slip?->po_sn ?? '—',
-        'slip_date' => $slip?->po_date ? date('Y-m-d', strtotime($slip->po_date)) : '—',
-
-        // suppliers + (product name)
-        'supplier'  => $purchase?->supplier?->name ?? ($it->entry?->supplier_name ?? '—'),
-        'desc'      => $it->product?->name ?? $it->item_name ?? '—',
-
-        // store receipt (purchase/store entry)
-        'purchase_sn'   => $purchase?->purchase_sn ?? ($it->entry?->purchase_sn ?? '—'),
-        'purchase_date' => $purchase?->purchase_date
-            ? date('Y-m-d', strtotime($purchase->purchase_date))
-            : ($it->entry?->purchase_date ?? '—'),
-
-        // IN
-        'qty'    => number_format($inQty, 3),
-        'unit'   => $it->unit ?? '',
-        'rate'   => number_format($rate, 2),
-        'amount' => number_format($inAmount, 2),
-
-        // ✅ KHARCHA (expense) - show actual issue (even for non-consumable)
-        'expense_sn'   => $expenseSn,
-        'expense_date' => $expenseDate,
-        'destination'  => $destination,
-        'out_qty'      => number_format($outQty, 3),
-        'out_amount'   => number_format($outAmount, 2),
-
-        // ✅ BAKI - only consumable reduces baki
-        'baki_qty'     => number_format($bakiQty, 3),
-        'baki_amount'  => number_format($bakiAmount, 2),
-
-        // ✅ remarks/cafiyat
-        'remarks' => $finalRemarks,
-    ];
-})->values()->all();
-
-$grandBakiQty    = $grandInQty - $grandOutQty;
-$grandBakiAmount = $grandInAmount - $grandOutAmount;
-
-$meta = [
-    'category_id'   => (int) $category->id,
-    'category_name' => $category->name ?? ('Category #' . $category->id),
-    'from'          => $from,
-    'to'            => $to,
-
-    'grand_in'      => number_format($grandInQty, 3),
-    'grand_out'     => number_format($grandOutQty, 3),      // ✅ only consumable
-    'grand_baki'    => number_format($grandBakiQty, 3),     // ✅ only consumable
-
-    // for your bottom "जम्मा" row (income amount total)
-    'grand_total'   => number_format($grandInAmount, 2),
-
-    // optional
-    'grand_in_amount'   => number_format($grandInAmount, 2),
-    'grand_out_amount'  => number_format($grandOutAmount, 2),    // ✅ only consumable
-    'grand_baki_amount' => number_format($grandBakiAmount, 2),   // ✅ only consumable
-];
-
-
-    return view('Backend.store.ledger_category', compact('rows', 'meta'));
-}
 
     public function ledger(Request $request)
     {

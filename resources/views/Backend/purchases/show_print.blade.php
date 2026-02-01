@@ -222,7 +222,8 @@
                             @endif
 
                             <td class="border border-black text-center">{{ $row['unit'] ?: '—' }}</td>
-                            <td class="border border-black text-center">{{ $row['required'] }}</td>
+                            <td class="border border-black text-center">{{ $row['required'] ?? number_format((float)($row['qty'] ?? 0), 3) }}
+</td>
                             <td class="border border-black text-center">{{ $row['rate'] }}</td>
                             <td class="border border-black text-center">{{ $row['amount'] }}</td>
                             <td class="border border-black text-center">{{ $row['store_entry_sn']?:'-' }}</td>

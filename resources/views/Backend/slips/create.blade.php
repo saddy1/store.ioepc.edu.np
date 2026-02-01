@@ -64,13 +64,16 @@
           <template id="row-template">
             <div class="grid grid-cols-12 gap-2 items-start row">
               {{-- Name + Suggestions + Detail --}}
-              <div class="col-span-4 space-y-2">
+              <div class="col-span-12 sm:col-span-4 space-y-2 relative">
                 <label class="block text-xs text-gray-600">Item (search previous slips or type custom)</label>
 
-                <input type="text" class="w-full rounded-lg border px-3 py-2 product-search"
-                       placeholder="Search by name or SN…">
+                <input type="text"
+                       class="w-full rounded-lg border px-3 py-2 product-search"
+                       placeholder="Search by name or SN…"
+                       autocomplete="off">
 
-                <div class="suggestions hidden border rounded-lg bg-white shadow z-10 max-h-48 overflow-auto"></div>
+                {{-- ✅ Make it a real dropdown (absolute) --}}
+                <div class="suggestions hidden absolute left-0 right-0 mt-1 border rounded-lg bg-white shadow z-50 max-h-48 overflow-auto"></div>
 
                 {{-- hidden fields posted to server --}}
                 <input type="hidden" class="product-id-field">
@@ -83,28 +86,28 @@
               </div>
 
               {{-- Qty --}}
-              <div class="col-span-1">
+              <div class="col-span-6 sm:col-span-1">
                 <label class="block text-xs text-gray-600">Quantity *</label>
                 <input type="number" step="0.001" min="0.001" placeholder="Qty"
                        class="w-full rounded-lg border px-3 py-2 ordered-qty" required>
               </div>
 
               {{-- Max Rate --}}
-              <div class="col-span-2">
+              <div class="col-span-6 sm:col-span-2">
                 <label class="block text-xs text-gray-600">Max Rate *</label>
                 <input type="number" step="0.01" min="0" placeholder="Max Rate"
                        class="w-full rounded-lg border px-3 py-2 max-rate" required>
               </div>
 
               {{-- Unit --}}
-              <div class="col-span-1">
+              <div class="col-span-6 sm:col-span-1">
                 <label class="block text-xs text-gray-600">Unit</label>
                 <input type="text" placeholder="e.g., pcs"
                        class="w-full rounded-lg border px-3 py-2 unit">
               </div>
 
               {{-- Item Category --}}
-              <div class="col-span-3">
+              <div class="col-span-6 sm:col-span-3">
                 <label class="block text-sm font-medium mb-1">Item Category *</label>
                 <select class="w-full rounded-lg border border-gray-300 focus:border-gray-400 focus:ring-0 px-3 py-2 item-category" required>
                   <option value="">-- Select Category --</option>
@@ -115,7 +118,7 @@
               </div>
 
               {{-- Delete --}}
-              <div class="col-span-1 flex justify-end pt-6">
+              <div class="col-span-12 sm:col-span-1 flex justify-end pt-0 sm:pt-6">
                 <button type="button" class="text-red-600 text-sm hover:underline del-btn">Del</button>
               </div>
             </div>
@@ -160,225 +163,223 @@
     }
   })();
 
-
-
-  // old input after validation failure
   window.__OLD_ITEMS__ = @json(old('items', []));
 
+  function slipForm() {
+    return {
+      booted: false,
 
-function slipForm() {
-  return {
-    booted: false,
+      init() {
+        if (this.booted) return;
+        this.booted = true;
 
-    init() {
-      if (this.booted) return;
-      this.booted = true;
+        const oldItems = Array.isArray(window.__OLD_ITEMS__) ? window.__OLD_ITEMS__ : [];
+        if (oldItems.length) oldItems.forEach(row => this.addRow(row));
+        else this.addRow();
+      },
 
-      const oldItems = Array.isArray(window.__OLD_ITEMS__) ? window.__OLD_ITEMS__ : [];
-      if (oldItems.length) {
-        oldItems.forEach(row => this.addRow(row));
-      } else {
-        this.addRow();
-      }
-    },
-
-    addRow(prefill = null) {
-      const wrap = document.getElementById('rows');
-      const tmpl = document.getElementById('row-template');
-      const node = tmpl.content.firstElementChild.cloneNode(true);
-      wrap.appendChild(node);
-      this.bindRow(node, prefill);
-      this.reindex();
-    },
-
-    bindRow(row, prefill = null) {
-      // delete row
-      row.querySelector('.del-btn').addEventListener('click', () => {
+      addRow(prefill = null) {
         const wrap = document.getElementById('rows');
-        if (wrap.querySelectorAll('.row').length <= 1) return;
-        row.remove();
+        const tmpl = document.getElementById('row-template');
+        const node = tmpl.content.firstElementChild.cloneNode(true);
+        wrap.appendChild(node);
+
+        this.bindRow(node, prefill);
         this.reindex();
-      });
+      },
 
-      // elements
-      const searchInput = row.querySelector('.product-search');
-      const listBox     = row.querySelector('.suggestions');
-      const pidField    = row.querySelector('.product-id-field');
-      const tempName    = row.querySelector('.temp-name-field');
-      const tempSN      = row.querySelector('.temp-sn-field');
-      const detailInput = row.querySelector('.detail-input');
+      bindRow(row, prefill = null) {
+        const wrap = document.getElementById('rows');
 
-      const qtyInput    = row.querySelector('.ordered-qty');
-      const rateInput   = row.querySelector('.max-rate');
-      const unitInput   = row.querySelector('.unit');
-      const catSelect   = row.querySelector('.item-category');
-
-      // sync visible detail -> hidden temp_sn
-      detailInput.addEventListener('input', () => {
-        tempSN.value = detailInput.value.trim();
-      });
-
-      // typeahead state
-      let debounceTimer = null;
-      let currentResults = [];
-      let activeIndex = -1;
-      let aborter = null;
-
-      const hideList = () => { listBox.classList.add('hidden'); activeIndex = -1; };
-      const showList = () => { listBox.classList.remove('hidden'); };
-
-      const renderList = () => {
-        if (!currentResults.length) { hideList(); return; }
-        listBox.innerHTML = currentResults.map((r,i) => `
-          <div class="px-3 py-2 hover:bg-gray-50 cursor-pointer ${i===activeIndex ? 'bg-gray-100' : ''}" data-idx="${i}">
-            <div class="text-sm font-medium">${r.text}</div>
-            <div class="text-xs text-gray-500">
-              ${r.last_qty ?? '—'} @ ${r.last_rate ?? '—'}${r.last_unit ? ' ('+r.last_unit+')' : ''}
-              ${r.last_category_name ? ' • ' + r.last_category_name : ''}
-            </div>
-          </div>
-        `).join('');
-        showList();
-
-        [...listBox.children].forEach(el => {
-          el.addEventListener('mousedown', (e) => { e.preventDefault(); choose(parseInt(el.dataset.idx, 10)); });
-          el.addEventListener('mouseenter', () => { activeIndex = parseInt(el.dataset.idx, 10); renderList(); });
+        // delete row
+        row.querySelector('.del-btn').addEventListener('click', () => {
+          if (wrap.querySelectorAll('.row').length <= 1) return;
+          row.remove();
+          this.reindex();
         });
-      };
 
-      const choose = (idx) => {
-        const item = currentResults[idx];
-        if (!item) return;
+        const searchInput = row.querySelector('.product-search');
+        const listBox     = row.querySelector('.suggestions');
+        const pidField    = row.querySelector('.product-id-field');
+        const tempName    = row.querySelector('.temp-name-field');
+        const tempSN      = row.querySelector('.temp-sn-field');
+        const detailInput = row.querySelector('.detail-input');
 
-        // we store custom fields, not a product id
-        pidField.value   = '';
-        tempName.value   = (item.temp_name || '').trim();
-        tempSN.value     = (item.temp_sn || '').trim();
+        const qtyInput    = row.querySelector('.ordered-qty');
+        const rateInput   = row.querySelector('.max-rate');
+        const unitInput   = row.querySelector('.unit');
+        const catSelect   = row.querySelector('.item-category');
 
-        searchInput.value = item.text;
-        detailInput.value = tempSN.value;
+        // sync visible detail -> hidden temp_sn
+        detailInput.addEventListener('input', () => {
+          tempSN.value = detailInput.value.trim();
+        });
 
-        // auto-fill values (editable)
-        if (item.last_unit)  unitInput.value = item.last_unit;
-        else                 unitInput.value = 'pcs'; // default to pcs if none
+        let debounceTimer = null;
+        let currentResults = [];
+        let activeIndex = -1;
+        let aborter = null;
 
-        if (item.last_rate)  rateInput.value = item.last_rate;
-        if (item.last_qty)   qtyInput.value  = item.last_qty;
+        const hideList = () => { listBox.classList.add('hidden'); activeIndex = -1; };
+        const showList = () => { listBox.classList.remove('hidden'); };
 
-        // preselect category
-        if (item.last_category_id && catSelect) {
-          catSelect.value = String(item.last_category_id);
-        }
+        const renderList = () => {
+          if (!currentResults.length) { hideList(); return; }
 
-        hideList();
-      };
+          listBox.innerHTML = currentResults.map((r,i) => `
+            <div class="px-3 py-2 hover:bg-gray-50 cursor-pointer ${i===activeIndex ? 'bg-gray-100' : ''}"
+                 data-idx="${i}">
+              <div class="text-sm font-medium">${escapeHtml(r.text)}</div>
+              <div class="text-xs text-gray-500">
+                ${r.last_qty ?? '—'} @ ${r.last_rate ?? '—'}${r.last_unit ? ' ('+escapeHtml(r.last_unit)+')' : ''}
+                ${r.last_category_name ? ' • ' + escapeHtml(r.last_category_name) : ''}
+              </div>
+            </div>
+          `).join('');
 
-      const fetchResults = (term) => {
-        if (aborter) aborter.abort();
-        aborter = new AbortController();
+          showList();
+        };
 
-        if (!term) { currentResults = []; renderList(); return; }
+        // ✅ ONE handler (delegation) so click always works even after re-render
+        listBox.addEventListener('mousedown', (e) => {
+          const itemEl = e.target.closest('[data-idx]');
+          if (!itemEl) return;
+          e.preventDefault(); // keep focus, prevent blur before choose
+          choose(parseInt(itemEl.dataset.idx, 10));
+        });
 
-        fetch(`{{ route('products.search') }}?q=${encodeURIComponent(term)}`, {
-          signal: aborter.signal,
-          headers: { 'Accept': 'application/json' }
-        })
-        .then(r => r.ok ? r.json() : [])
-        .then(json => {
-          if (!Array.isArray(json)) json = [];
-          // map server results; supports category + detail
-          currentResults = json.map(x => ({
-            id: x.id,
-            text: (x.text || '').toString(),
-            temp_name: x.temp_name || '',
-            temp_sn: x.temp_sn || '',
-            last_qty: x.last_qty ?? null,
-            last_rate: x.last_rate ?? null,
-            last_unit: x.last_unit || '',
-            last_category_id: x.last_category_id ?? null,
-            last_category_name: x.last_category_name ?? '',
-          }));
-          activeIndex = currentResults.length ? 0 : -1;
-          renderList();
-        })
-        .catch(() => { currentResults = []; renderList(); });
-      };
+        const choose = (idx) => {
+          const item = currentResults[idx];
+          if (!item) return;
 
-      // typing handlers
-      searchInput.addEventListener('input', () => {
-        // default to custom; suggestions can overwrite
-        pidField.value = '';
-        tempName.value = searchInput.value.trim();
+          pidField.value   = '';
+          tempName.value   = (item.temp_name || item.text || '').trim();
+          tempSN.value     = (item.temp_sn || '').trim();
 
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => fetchResults(searchInput.value.trim()), 200);
-      });
+          searchInput.value = (item.text || '').toString();
+          detailInput.value = tempSN.value;
 
-      searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowDown' && currentResults.length) {
-          e.preventDefault(); activeIndex = (activeIndex + 1) % currentResults.length; renderList();
-        } else if (e.key === 'ArrowUp' && currentResults.length) {
-          e.preventDefault(); activeIndex = (activeIndex - 1 + currentResults.length) % currentResults.length; renderList();
-        } else if (e.key === 'Enter') {
-          if (currentResults.length && activeIndex >= 0) {
-            e.preventDefault(); choose(activeIndex);
-          } else {
-            // keep as custom user entry
-            pidField.value  = '';
-            tempName.value  = searchInput.value.trim();
-            tempSN.value    = detailInput.value.trim();
+          unitInput.value = item.last_unit ? item.last_unit : (unitInput.value || 'pcs');
+
+          if (item.last_rate != null && item.last_rate !== '') rateInput.value = item.last_rate;
+          if (item.last_qty  != null && item.last_qty  !== '') qtyInput.value  = item.last_qty;
+
+          if (item.last_category_id && catSelect) {
+            catSelect.value = String(item.last_category_id);
+          }
+
+          hideList();
+        };
+
+        const fetchResults = (term) => {
+          if (aborter) aborter.abort();
+          aborter = new AbortController();
+
+          if (!term) { currentResults = []; renderList(); return; }
+
+          fetch(`{{ route('products.search') }}?q=${encodeURIComponent(term)}`, {
+            signal: aborter.signal,
+            headers: { 'Accept': 'application/json' }
+          })
+          .then(r => r.ok ? r.json() : [])
+          .then(json => {
+            if (!Array.isArray(json)) json = [];
+
+            currentResults = json.map(x => ({
+              // make sure these keys match your API response
+              text: (x.text || x.name || '').toString(),
+              temp_name: x.temp_name || x.name || '',
+              temp_sn: x.temp_sn || x.detail || '',
+              last_qty: x.last_qty ?? null,
+              last_rate: x.last_rate ?? null,
+              last_unit: x.last_unit || '',
+              last_category_id: x.last_category_id ?? null,
+              last_category_name: x.last_category_name ?? '',
+            }));
+
+            activeIndex = currentResults.length ? 0 : -1;
+            renderList();
+          })
+          .catch(() => { currentResults = []; renderList(); });
+        };
+
+        searchInput.addEventListener('input', () => {
+          pidField.value = '';
+          tempName.value = searchInput.value.trim();
+
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => fetchResults(searchInput.value.trim()), 200);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown' && currentResults.length) {
+            e.preventDefault();
+            activeIndex = (activeIndex + 1) % currentResults.length;
+            renderList();
+          } else if (e.key === 'ArrowUp' && currentResults.length) {
+            e.preventDefault();
+            activeIndex = (activeIndex - 1 + currentResults.length) % currentResults.length;
+            renderList();
+          } else if (e.key === 'Enter') {
+            if (currentResults.length && activeIndex >= 0) {
+              e.preventDefault();
+              choose(activeIndex);
+            } else {
+              pidField.value  = '';
+              tempName.value  = searchInput.value.trim();
+              tempSN.value    = detailInput.value.trim();
+              hideList();
+            }
+          } else if (e.key === 'Escape') {
             hideList();
           }
-        } else if (e.key === 'Escape') {
-          hideList();
-        }
-      });
+        });
 
-      searchInput.addEventListener('blur', () => {
-        setTimeout(() => {
-          if (!pidField.value && searchInput.value.trim() !== '') {
-            tempName.value = searchInput.value.trim();
-            tempSN.value   = detailInput.value.trim();
-          }
-          hideList();
-        }, 120);
-      });
+        // ✅ Don’t kill list instantly (mousedown will run before this)
+        searchInput.addEventListener('blur', () => {
+          setTimeout(() => {
+            if (!pidField.value && searchInput.value.trim() !== '') {
+              tempName.value = searchInput.value.trim();
+              tempSN.value   = detailInput.value.trim();
+            }
+            hideList();
+          }, 180);
+        });
 
-      // Prefill from old input after validation error
-      if (prefill && typeof prefill === 'object') {
-        if (prefill.product_id) {
-          pidField.value     = String(prefill.product_id);
-          searchInput.value  = `#${prefill.product_id} (selected)`;
-          tempName.value     = '';
-          tempSN.value       = '';
-        } else {
+        // Prefill after validation failure
+        if (prefill && typeof prefill === 'object') {
           searchInput.value  = prefill.temp_name ?? '';
           detailInput.value  = prefill.temp_sn ?? '';
-          pidField.value     = '';
           tempName.value     = prefill.temp_name ?? '';
           tempSN.value       = prefill.temp_sn ?? '';
-        }
-        if (prefill.ordered_qty != null) qtyInput.value = prefill.ordered_qty;
-        if (prefill.max_rate   != null)  rateInput.value= prefill.max_rate;
-        if (prefill.unit)                unitInput.value= prefill.unit;
-        if (prefill.item_category_id)    catSelect.value= String(prefill.item_category_id);
-      }
-    },
 
-    reindex() {
-      const wrap = document.getElementById('rows');
-      [...wrap.querySelectorAll('.row')].forEach((row, i) => {
-        row.querySelector('.product-id-field')?.setAttribute('name', `items[${i}][product_id]`);
-        row.querySelector('.temp-name-field')?.setAttribute('name', `items[${i}][temp_name]`);
-        row.querySelector('.temp-sn-field')?.setAttribute('name', `items[${i}][temp_sn]`);
-        row.querySelector('.ordered-qty')?.setAttribute('name', `items[${i}][ordered_qty]`);
-        row.querySelector('.max-rate')?.setAttribute('name', `items[${i}][max_rate]`);
-        row.querySelector('.unit')?.setAttribute('name', `items[${i}][unit]`);
-        row.querySelector('.item-category')?.setAttribute('name', `items[${i}][item_category_id]`);
-      });
+          if (prefill.ordered_qty != null) qtyInput.value = prefill.ordered_qty;
+          if (prefill.max_rate   != null)  rateInput.value= prefill.max_rate;
+          if (prefill.unit)                unitInput.value= prefill.unit;
+          if (prefill.item_category_id)    catSelect.value= String(prefill.item_category_id);
+        }
+      },
+
+      reindex() {
+        const wrap = document.getElementById('rows');
+        [...wrap.querySelectorAll('.row')].forEach((row, i) => {
+          row.querySelector('.product-id-field')?.setAttribute('name', `items[${i}][product_id]`);
+          row.querySelector('.temp-name-field')?.setAttribute('name', `items[${i}][temp_name]`);
+          row.querySelector('.temp-sn-field')?.setAttribute('name', `items[${i}][temp_sn]`);
+          row.querySelector('.ordered-qty')?.setAttribute('name', `items[${i}][ordered_qty]`);
+          row.querySelector('.max-rate')?.setAttribute('name', `items[${i}][max_rate]`);
+          row.querySelector('.unit')?.setAttribute('name', `items[${i}][unit]`);
+          row.querySelector('.item-category')?.setAttribute('name', `items[${i}][item_category_id]`);
+        });
+      }
     }
   }
-}
+
+  // small helper to avoid html breaking on names
+  function escapeHtml(str) {
+    return (str ?? '').toString().replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+  }
 </script>
 @endsection
-
